@@ -8,7 +8,9 @@ const MODES: { id: Mode; label: string; icon: string }[] = [
   { id: 'disassembly', label: 'Guided Teardown', icon: '🔧' },
   { id: 'reassembly', label: 'Reassembly', icon: '🔩' },
   { id: 'quiz', label: 'Assessment', icon: '📋' },
-  { id: 'flow', label: 'Flow Sim', icon: '💨' },
+  { id: 'flow', label: 'Flow', icon: '💨' },
+  { id: 'combust', label: 'Combustion', icon: '🔥' },
+  { id: 'stress', label: 'Torque · Stress', icon: '📈' },
 ]
 
 export const TopBar: React.FC = () => {

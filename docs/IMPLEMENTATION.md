@@ -32,20 +32,48 @@ src/
     systems.ts          The 10 engine systems: id, display name, color
     parts.ts            Part catalog (single source of truth, see §4)
     quiz.ts             Assessment questions
+  sim/                  Pure physics models (no React/three imports except types)
+    flow.ts             Lumped-parameter fluid model + particle circuit paths
+    engineCycle.ts      Crank-angle cycle model: pressure, torque, stress, sim clock
   engine/               Everything rendered inside the r3f <Canvas>
     EngineScene.tsx     Canvas, lights, grid, OrbitControls, CameraRig
     PartMesh.tsx        Per-part: visibility, animation, highlight, drag, click routing
     geometry.tsx        Procedural geometry builders, keyed by PartDef.build
+    FlowParticles.tsx   Particle streams along the sim/flow circuit splines
+    SimDriver.tsx       Advances the crank-angle clock; combustion flash FX
   ui/                   Everything rendered as DOM
     Toolbar.tsx         TopBar (mode tabs), BottomToolbar (view actions), Toast
-    SidePanel.tsx       Left panel: one sub-panel per mode
+    SidePanel.tsx       Left panel: one sub-panel per mode (incl. sim panels + canvases)
     InfoPanel.tsx       Right panel: selected-part metadata ("Learning Panel")
 ```
 
 **Dependency direction (enforce when editing):**
-`data/` depends on `types.ts` only. `store.ts` depends on `data/`. `engine/` and `ui/` depend
-on `store.ts` + `data/`. Nothing imports from `engine/` or `ui/` except `App.tsx`. Training
-logic must never live in `engine/` — that separation is a PRD requirement (§14).
+`data/` depends on `types.ts` only. `sim/` is pure TypeScript physics (flow → engineCycle),
+imported by `engine/`, `ui/`, and `geometry.tsx` (crank pin angles). `store.ts` depends on
+`data/`. `engine/` and `ui/` depend on `store.ts` + `data/` + `sim/`. Nothing imports from
+`engine/` or `ui/` except `App.tsx`. Training logic must never live in `engine/` — that
+separation is a PRD requirement (§14).
+
+### Simulation modes (flow / combust / stress)
+
+`sim/flow.ts` (`computeFlow`) is a quasi-steady 1D model: boost/spool curves, ideal-gas
+manifold density, AFR/fuel/power balance, coolant and oil pump curves. `sim/engineCycle.ts`
+(`computeCycle`, memoized via `getCycle`) integrates cylinder pressure per crank degree
+(Wiebe heat release with a lumped wall-loss knockdown of 0.74, polytropic γ 1.32/1.28),
+then sums slider-crank torque across six cylinders using the real firing order
+(`FIRE_DEG = [0,480,240,600,120,360]`, pins `PIN_ANGLES = [0,240,120,120,240,0]` — geometry
+and animation share these constants) and derives component-stress utilizations (`partUtil`).
+Calibration targets: ~430 g/s MAF, ~116 bar peak pressure, ~26 bar IMEP, ~570 N·m / ~430 kW
+at 7200 rpm full load.
+
+Animation: `simClock` (module-level mutable, degrees 0–720) is advanced by `SimDriver`
+inside the canvas, scaled by the `simTimeScale` slow-motion slider. `PartMesh.useFrame`
+reads it to rotate crank/damper (1×), cams/VANOS (½×), and stroke the pistons via a
+scene-unit slider-crank (`pistonOffsetY`). In stress mode `PartMesh` overrides
+`material.color` with an HSL blue→red ramp from `partUtil`; the color lerps back to the
+base color when leaving the mode. Sim modes also override opacity (moving parts opaque,
+statics ghosted). Charts in the side panels are plain 2D `<canvas>` redrawn on input change
+(`SimCanvas` in `SidePanel.tsx`).
 
 ## 3. Coordinate system & scene conventions
 

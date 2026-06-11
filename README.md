@@ -22,6 +22,9 @@ Targets desktop Chrome/Edge with mouse + keyboard.
 | **Guided Teardown** | 29-step removal sequence. The next part pulses green; out-of-sequence attempts are rejected with the dependency that blocks them, and mistakes are counted. |
 | **Reassembly** | Starts from a bare block. Pick parts from the tray, drag them onto the engine; they snap when close and validate against reverse-teardown order. Attempts and mistakes are recorded. |
 | **Assessment** | 10-question quiz mixing click-to-identify (in the 3D view) and multiple-choice service knowledge. Scores, time, and missed topics are saved. |
+| **Flow** | Lumped-parameter (1D) fluid dynamics: rpm/throttle sliders drive a gas/thermal model; intake, exhaust, coolant, and oil circuits animate as particle streams with live readouts (MAF, boost, turbo speed, coolant ΔT, oil pressure…). |
+| **Combustion** | Crank-angle-resolved cycle model (Wiebe heat release, polytropic compression/expansion). The rotating assembly animates in slow motion with combustion flashes in firing order 1-5-3-6-2-4; charts show the pressure trace and P–V loop; readouts include peak pressure, IMEP, torque, and power. |
+| **Torque · Stress** | Instantaneous crank torque from slider-crank kinematics summed over six cylinders, plus component load estimates (gas force, conrod force, bearing pressure). Parts are heat-map colored by utilization of design allowables. |
 
 Progress persists in `localStorage` and can be exported as CSV from the Explore panel
 (instructor report: parts inspected, teardown/reassembly completion and mistakes, quiz history).

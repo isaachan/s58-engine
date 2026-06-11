@@ -5,6 +5,7 @@ import { Html } from '@react-three/drei'
 import type { PartDef } from '../types'
 import { SYSTEMS } from '../data/systems'
 import { REMOVAL_SEQUENCE } from '../data/parts'
+import { PIN_ANGLES, getCycle, simClock } from '../sim/engineCycle'
 import { BUILDERS } from './geometry'
 import { useStore } from '../store'
 
@@ -12,6 +13,22 @@ const tmpVec = new THREE.Vector3()
 const planeNormal = new THREE.Vector3()
 const dragPlane = new THREE.Plane()
 const hit = new THREE.Vector3()
+
+/* scene-unit slider-crank used for piston animation (matches crank geometry) */
+const R_S = 0.14
+const ROD_S = 0.46
+function pistonOffsetY(thetaDeg: number, pinDeg: number) {
+  const th = ((thetaDeg + pinDeg) * Math.PI) / 180
+  const s = R_S * Math.sin(th)
+  const x = R_S * (1 - Math.cos(th)) + ROD_S - Math.sqrt(ROD_S * ROD_S - s * s)
+  return R_S - x // +R_S at TDC, ≈ -R_S at BDC
+}
+
+/* parts that keep full opacity while the engine runs in sim modes */
+const MOVING = new Set([
+  'crankshaft', 'harmonic-damper', 'camshaft-intake', 'camshaft-exhaust', 'vanos-unit',
+  'timing-chain', 'piston-1', 'piston-2', 'piston-3', 'piston-4', 'piston-5', 'piston-6',
+])
 
 export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
   const group = useRef<THREE.Group>(null!)
@@ -46,6 +63,7 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
       transparent: true,
     })
   }, [system.color])
+  const baseColor = useMemo(() => material.color.clone(), [material])
 
   // Visibility rules per mode
   const isolatedOut = isolatedSystem !== null && def.system !== isolatedSystem
@@ -65,6 +83,33 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
   useFrame((_, dt) => {
     if (!group.current || dragging) return
     group.current.position.lerp(target, Math.min(1, dt * 6))
+
+    const simMode = mode === 'combust' || mode === 'stress'
+    if (simMode) {
+      const th = (simClock.thetaDeg * Math.PI) / 180
+      if (def.id === 'crankshaft' || def.id === 'harmonic-damper') {
+        group.current.rotation.x = th % (Math.PI * 2)
+      } else if (def.id.startsWith('camshaft') || def.id === 'vanos-unit') {
+        group.current.rotation.x = (th / 2) % (Math.PI * 2)
+      } else if (def.id.startsWith('piston-')) {
+        const cyl = Number(def.id.slice(7)) - 1
+        group.current.position.y = target.y + pistonOffsetY(simClock.thetaDeg, PIN_ANGLES[cyl])
+      }
+    } else if (group.current.rotation.x !== 0) {
+      // settle back to the assembled pose when leaving sim modes
+      group.current.rotation.x *= Math.max(0, 1 - dt * 6)
+      if (Math.abs(group.current.rotation.x) < 0.01) group.current.rotation.x = 0
+    }
+
+    // stress heat-map coloring (blue → red by utilization), else base color
+    if (mode === 'stress') {
+      const st = useStore.getState()
+      const u = getCycle(st.simRpm, st.simLoad).partUtil[def.id] ?? 0.05
+      material.color.setHSL(0.62 * (1 - Math.min(Math.max(u, 0), 1)), 0.85, 0.5)
+    } else if (!material.color.equals(baseColor)) {
+      material.color.lerp(baseColor, Math.min(1, dt * 8))
+    }
+
     // material state
     const m = material
     let emissive = 0x000000
@@ -86,11 +131,19 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
         ? selected || hovered
           ? 0.45
           : 0.13
-        : isolatedOut
-          ? 0.08
-          : mode === 'disassembly' && removed
-            ? 0.3
-            : 1
+        : mode === 'combust'
+          ? MOVING.has(def.id)
+            ? 1
+            : 0.14
+          : mode === 'stress'
+            ? MOVING.has(def.id)
+              ? 1
+              : 0.5
+            : isolatedOut
+              ? 0.08
+              : mode === 'disassembly' && removed
+                ? 0.3
+                : 1
     m.opacity += (targetOpacity - m.opacity) * Math.min(1, dt * 8)
     m.depthWrite = m.opacity > 0.5
   })

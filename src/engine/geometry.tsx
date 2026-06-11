@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import React, { useMemo } from 'react'
 import { RoundedBox } from '@react-three/drei'
+import { PIN_ANGLES } from '../sim/engineCycle'
 
 /**
  * Procedural geometry builders. Each builder composes primitive meshes that
@@ -407,7 +408,7 @@ const Crankshaft: Builder = ({ material }) => {
         </mesh>
       ))}
       {CYLS.map((x, i) => {
-        const ang = (i % 3) * ((Math.PI * 2) / 3)
+        const ang = (PIN_ANGLES[i] * Math.PI) / 180
         const py = Math.cos(ang) * 0.14
         const pz = Math.sin(ang) * 0.14
         return (

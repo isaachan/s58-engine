@@ -6,6 +6,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { PARTS, PART_MAP } from '../data/parts'
 import { PartMesh } from './PartMesh'
 import { FlowParticles } from './FlowParticles'
+import { SimDriver } from './SimDriver'
 import { useStore } from '../store'
 
 const HOME_POS = new THREE.Vector3(4.6, 2.6, 5.2)
@@ -67,6 +68,7 @@ export const EngineScene: React.FC = () => {
         <PartMesh key={p.id} def={p} />
       ))}
       <FlowParticles />
+      <SimDriver />
 
       <Grid
         position={[0, -3.2, 0]}

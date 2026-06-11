@@ -64,6 +64,10 @@ interface State {
   flowRpm: number
   flowThrottle: number
   flowCircuits: Set<string>
+  /** combustion / stress simulation inputs */
+  simRpm: number
+  simLoad: number
+  simTimeScale: number
 
   setMode: (m: Mode) => void
   select: (id: string | null) => void
@@ -80,6 +84,9 @@ interface State {
   setFlowRpm: (v: number) => void
   setFlowThrottle: (v: number) => void
   toggleCircuit: (id: string) => void
+  setSimRpm: (v: number) => void
+  setSimLoad: (v: number) => void
+  setSimTimeScale: (v: number) => void
   flash: (f: Omit<Feedback, 'ts'>) => void
 
   attemptRemove: (id: string) => void
@@ -125,6 +132,9 @@ export const useStore = create<State>((set, get) => ({
   flowRpm: 3000,
   flowThrottle: 0.6,
   flowCircuits: new Set(['intake', 'exhaust', 'coolant', 'oil']),
+  simRpm: 2400,
+  simLoad: 0.8,
+  simTimeScale: 0.05,
 
   setMode: (m) => {
     const base = {
@@ -182,6 +192,9 @@ export const useStore = create<State>((set, get) => ({
       next.has(id) ? next.delete(id) : next.add(id)
       return { flowCircuits: next }
     }),
+  setSimRpm: (v) => set({ simRpm: v }),
+  setSimLoad: (v) => set({ simLoad: v }),
+  setSimTimeScale: (v) => set({ simTimeScale: v }),
   flash: (f) => {
     set({ feedback: { ...f, ts: Date.now() } })
     setTimeout(() => {
