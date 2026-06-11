@@ -81,7 +81,16 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
     }
     m.emissive.setHex(emissive)
     m.emissiveIntensity = intensity
-    const targetOpacity = isolatedOut ? 0.08 : mode === 'disassembly' && removed ? 0.3 : 1
+    const targetOpacity =
+      mode === 'flow'
+        ? selected || hovered
+          ? 0.45
+          : 0.13
+        : isolatedOut
+          ? 0.08
+          : mode === 'disassembly' && removed
+            ? 0.3
+            : 1
     m.opacity += (targetOpacity - m.opacity) * Math.min(1, dt * 8)
     m.depthWrite = m.opacity > 0.5
   })

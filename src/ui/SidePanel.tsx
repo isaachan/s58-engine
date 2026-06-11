@@ -3,6 +3,7 @@ import { useStore } from '../store'
 import { PART_MAP, REMOVAL_SEQUENCE } from '../data/parts'
 import { SYSTEMS, SYSTEM_ORDER } from '../data/systems'
 import { QUIZ_QUESTIONS } from '../data/quiz'
+import { CIRCUITS, computeFlow } from '../sim/flow'
 
 const ExplodedPanel: React.FC = () => {
   const isolated = useStore((s) => s.isolatedSystem)
@@ -227,6 +228,78 @@ const ExplorePanel: React.FC = () => {
   )
 }
 
+const FlowPanel: React.FC = () => {
+  const rpm = useStore((s) => s.flowRpm)
+  const throttle = useStore((s) => s.flowThrottle)
+  const circuits = useStore((s) => s.flowCircuits)
+  const f = computeFlow({ rpm, throttle })
+
+  return (
+    <div className="side-content">
+      <h3>Fluid Dynamics</h3>
+      <p className="small muted">
+        Lumped-parameter (1D) flow model — quasi-steady gas and thermal balances, not CFD.
+        Particle speed tracks computed flow rates.
+      </p>
+      <label className="slider-row">
+        <span>Engine speed</span>
+        <input
+          type="range"
+          min={800}
+          max={7200}
+          step={50}
+          value={rpm}
+          onChange={(e) => useStore.getState().setFlowRpm(Number(e.target.value))}
+        />
+        <strong>{rpm} rpm</strong>
+      </label>
+      <label className="slider-row">
+        <span>Throttle</span>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={throttle}
+          onChange={(e) => useStore.getState().setFlowThrottle(Number(e.target.value))}
+        />
+        <strong>{Math.round(throttle * 100)}%</strong>
+      </label>
+
+      <div className="sys-list">
+        {CIRCUITS.map((c) => (
+          <button
+            key={c.id}
+            className={circuits.has(c.id) ? 'active' : ''}
+            onClick={() => useStore.getState().toggleCircuit(c.id)}
+          >
+            <span className="dot" style={{ background: c.color }} />
+            {c.name}
+          </button>
+        ))}
+      </div>
+
+      <div className="stat-grid">
+        <div className="stat"><span className="stat-num">{f.mafGs.toFixed(0)} g/s</span><span className="stat-label">mass air flow</span></div>
+        <div className="stat"><span className="stat-num">{f.boostBar.toFixed(2)} bar</span><span className="stat-label">boost (gauge)</span></div>
+        <div className="stat"><span className="stat-num">{f.turboKrpm.toFixed(0)} krpm</span><span className="stat-label">turbo speed</span></div>
+        <div className="stat"><span className="stat-num">{f.chargeTempC.toFixed(0)} °C</span><span className="stat-label">charge temp</span></div>
+        <div className="stat"><span className="stat-num">{f.exhaustTempC.toFixed(0)} °C</span><span className="stat-label">exhaust temp</span></div>
+        <div className="stat"><span className="stat-num">{f.exhaustGs.toFixed(0)} g/s</span><span className="stat-label">exhaust flow</span></div>
+        <div className="stat"><span className="stat-num">{f.coolantLpm.toFixed(0)} L/min</span><span className="stat-label">coolant flow</span></div>
+        <div className="stat"><span className="stat-num">+{f.coolantDeltaC.toFixed(1)} °C</span><span className="stat-label">coolant ΔT</span></div>
+        <div className="stat"><span className="stat-num">{f.oilBar.toFixed(1)} bar</span><span className="stat-label">oil pressure</span></div>
+        <div className="stat"><span className="stat-num">{f.oilLpm.toFixed(0)} L/min</span><span className="stat-label">oil flow</span></div>
+        <div className="stat"><span className="stat-num">{f.powerKw.toFixed(0)} kW</span><span className="stat-label">est. power</span></div>
+        <div className="stat"><span className="stat-num">{f.fuelGs.toFixed(1)} g/s</span><span className="stat-label">fuel flow</span></div>
+      </div>
+      <p className="small muted">
+        Engine parts are ghosted so circuits are visible. Hover or select parts to identify them.
+      </p>
+    </div>
+  )
+}
+
 export const SidePanel: React.FC = () => {
   const mode = useStore((s) => s.mode)
   return (
@@ -236,6 +309,7 @@ export const SidePanel: React.FC = () => {
       {mode === 'disassembly' && <DisassemblyPanel />}
       {mode === 'reassembly' && <ReassemblyPanel />}
       {mode === 'quiz' && <QuizPanel />}
+      {mode === 'flow' && <FlowPanel />}
     </aside>
   )
 }

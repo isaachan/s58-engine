@@ -43,7 +43,7 @@ export interface PartDef {
   simplified?: string
 }
 
-export type Mode = 'explore' | 'exploded' | 'disassembly' | 'reassembly' | 'quiz'
+export type Mode = 'explore' | 'exploded' | 'disassembly' | 'reassembly' | 'quiz' | 'flow'
 
 export interface QuizQuestion {
   id: string

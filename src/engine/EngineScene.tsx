@@ -5,6 +5,7 @@ import { OrbitControls, Grid, ContactShadows } from '@react-three/drei'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { PARTS, PART_MAP } from '../data/parts'
 import { PartMesh } from './PartMesh'
+import { FlowParticles } from './FlowParticles'
 import { useStore } from '../store'
 
 const HOME_POS = new THREE.Vector3(4.6, 2.6, 5.2)
@@ -65,6 +66,7 @@ export const EngineScene: React.FC = () => {
       {PARTS.map((p) => (
         <PartMesh key={p.id} def={p} />
       ))}
+      <FlowParticles />
 
       <Grid
         position={[0, -3.2, 0]}

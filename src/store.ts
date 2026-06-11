@@ -60,6 +60,10 @@ interface State {
   progress: Progress
   resetViewToken: number
   focusPartId: string | null
+  /** flow simulation inputs */
+  flowRpm: number
+  flowThrottle: number
+  flowCircuits: Set<string>
 
   setMode: (m: Mode) => void
   select: (id: string | null) => void
@@ -73,6 +77,9 @@ interface State {
   toggleLabels: () => void
   requestResetView: () => void
   focusPart: (id: string | null) => void
+  setFlowRpm: (v: number) => void
+  setFlowThrottle: (v: number) => void
+  toggleCircuit: (id: string) => void
   flash: (f: Omit<Feedback, 'ts'>) => void
 
   attemptRemove: (id: string) => void
@@ -115,6 +122,9 @@ export const useStore = create<State>((set, get) => ({
   progress: loadProgress(),
   resetViewToken: 0,
   focusPartId: null,
+  flowRpm: 3000,
+  flowThrottle: 0.6,
+  flowCircuits: new Set(['intake', 'exhaust', 'coolant', 'oil']),
 
   setMode: (m) => {
     const base = {
@@ -164,6 +174,14 @@ export const useStore = create<State>((set, get) => ({
   toggleLabels: () => set((s) => ({ showLabels: !s.showLabels })),
   requestResetView: () => set((s) => ({ resetViewToken: s.resetViewToken + 1 })),
   focusPart: (id) => set({ focusPartId: id }),
+  setFlowRpm: (v) => set({ flowRpm: v }),
+  setFlowThrottle: (v) => set({ flowThrottle: v }),
+  toggleCircuit: (id) =>
+    set((s) => {
+      const next = new Set(s.flowCircuits)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return { flowCircuits: next }
+    }),
   flash: (f) => {
     set({ feedback: { ...f, ts: Date.now() } })
     setTimeout(() => {

@@ -171,6 +171,16 @@ body {
   padding: 3px 8px; border-radius: 5px; white-space: nowrap;
 }
 
+/* ---------- sliders (flow sim) ---------- */
+.slider-row {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 10px;
+  font-size: 12px; color: var(--muted); align-items: center;
+}
+.slider-row input[type='range'] {
+  grid-column: 1 / -1; width: 100%; accent-color: var(--accent);
+}
+.slider-row strong { color: var(--text); font-size: 13px; }
+
 /* ---------- generic buttons ---------- */
 .side-content button, .panel-actions button {
   background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
