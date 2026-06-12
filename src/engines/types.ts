@@ -1,7 +1,7 @@
 import type { PartDef, QuizQuestion, SystemId, Vec3 } from '../types'
 import type { FlowResult } from '../sim/flow'
 
-export type EngineId = 's58' | 'b48' | 'skyactiv-g' | 'ea888'
+export type EngineId = 's58' | 'b48' | 'skyactiv-g' | 'ea888' | 'n52'
 
 export interface LocalizedString {
   en: string

@@ -1,0 +1,60 @@
+import type { EngineZhContent } from '../types'
+
+export const zh: EngineZhContent = {
+  parts: {
+    'cylinder-block': { name: '气缸体（镁铝合金）' },
+    'cylinder-head': { name: '气缸盖' },
+    'valve-cover': { name: '气门室盖（镁合金）' },
+    'camshaft-intake': { name: '进气凸轮轴' },
+    'camshaft-exhaust': { name: '排气凸轮轴' },
+    crankshaft: { name: '曲轴' },
+    'piston-1': { name: '活塞与连杆 #1' },
+    'piston-2': { name: '活塞与连杆 #2' },
+    'piston-3': { name: '活塞与连杆 #3' },
+    'piston-4': { name: '活塞与连杆 #4' },
+    'piston-5': { name: '活塞与连杆 #5' },
+    'piston-6': { name: '活塞与连杆 #6' },
+    'harmonic-damper': { name: '扭振减振器（曲轴皮带盘）' },
+    'timing-cover': { name: '正时罩盖' },
+    'vanos-unit': { name: 'VANOS 单元（凸轮相位器）' },
+    'timing-chain': { name: '正时链与导轨' },
+    valvetronic: { name: 'Valvetronic 可变气门升程' },
+    'exhaust-manifold': { name: '排气歧管（头段）' },
+    'intake-manifold': { name: '进气歧管（三级 DISA）' },
+    'throttle-body': { name: '节气门体' },
+    'fuel-rail': { name: '燃油轨（低压）' },
+    'injector-set': { name: '进气道喷油器（6 个）' },
+    'water-pump': { name: '电子冷却液泵' },
+    'thermostat-housing': { name: '节温器壳体' },
+    'oil-filter-housing': { name: '机油滤清器壳体' },
+    'oil-pan': { name: '油底壳' },
+    'oil-pump': { name: '机油泵' },
+  },
+  quiz: {
+    'n52-q1': {
+      prompt: 'N52 如何供油？',
+      options: ['进气道（歧管）喷射——无高压泵', '350 bar 缸内直喷', '500 bar 缸内直喷', '机械化油器'],
+    },
+    'n52-q2': {
+      prompt: 'N52 的气缸体有何特别之处？',
+      options: ['镁铝合金复合缸体', '灰铸铁', '无缸套的开放式缸体', '碳纤维制造'],
+    },
+    'n52-q3': { prompt: '单击调节进气门升程的总成（主要负荷控制）。' },
+    'n52-q4': { prompt: '单击电子冷却液泵。' },
+    'n52-q5': {
+      prompt: 'N52 如何循环发动机冷却液？',
+      options: ['采用电子冷却液泵', '采用皮带驱动的机械泵', '仅靠热虹吸', '采用排气驱动的泵'],
+    },
+    'n52-q6': { prompt: '单击三级 DISA 可变长度进气歧管。' },
+    'n52-q7': { prompt: '本模块使用的点火顺序是什么？', options: ['1-5-3-6-2-4', '1-3-4-2', '1-2-3-4-5-6', '1-6-2-4-3-5'] },
+    'n52-q8': { prompt: '单击进气道喷油器。' },
+    'n52-q9': {
+      prompt: '拆下正时链之前，发动机应……',
+      options: ['用正时工具锁定在 1 缸上止点', '怠速运行五分钟', '反复反向转动', '加满冷却液'],
+    },
+    'n52-q10': {
+      prompt: 'N52 是涡轮增压的吗？',
+      options: ['不是——它是自然吸气', '是——单个双流道涡轮', '是——两个单流道涡轮', '是——可变截面涡轮'],
+    },
+  },
+}
