@@ -528,16 +528,30 @@ const StressPanel: React.FC = () => {
 
 export const SidePanel: React.FC = () => {
   const mode = useStore((s) => s.mode)
+  const collapsed = useStore((s) => s.sideCollapsed)
+  const { t } = useI18n()
   return (
-    <aside className="side-panel">
-      {mode === 'explore' && <ExplorePanel />}
-      {mode === 'exploded' && <ExplodedPanel />}
-      {mode === 'disassembly' && <DisassemblyPanel />}
-      {mode === 'reassembly' && <ReassemblyPanel />}
-      {mode === 'quiz' && <QuizPanel />}
-      {mode === 'flow' && <FlowPanel />}
-      {mode === 'combust' && <CombustionPanel />}
-      {mode === 'stress' && <StressPanel />}
+    <aside className={`side-panel ${collapsed ? 'collapsed' : ''}`}>
+      <button
+        className="panel-fold"
+        onClick={() => useStore.getState().toggleSidePanel()}
+        title={collapsed ? t('panel.expand') : t('panel.collapse')}
+        aria-expanded={!collapsed}
+      >
+        {collapsed ? '»' : '«'}
+      </button>
+      {!collapsed && (
+        <div className="panel-scroll">
+          {mode === 'explore' && <ExplorePanel />}
+          {mode === 'exploded' && <ExplodedPanel />}
+          {mode === 'disassembly' && <DisassemblyPanel />}
+          {mode === 'reassembly' && <ReassemblyPanel />}
+          {mode === 'quiz' && <QuizPanel />}
+          {mode === 'flow' && <FlowPanel />}
+          {mode === 'combust' && <CombustionPanel />}
+          {mode === 'stress' && <StressPanel />}
+        </div>
+      )}
     </aside>
   )
 }

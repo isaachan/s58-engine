@@ -4,17 +4,41 @@ import { PART_MAP } from '../data/parts'
 import { SYSTEMS } from '../data/systems'
 import { useI18n } from '../i18n'
 
+const FoldButton: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
+  const { t } = useI18n()
+  return (
+    <button
+      className="panel-fold"
+      onClick={() => useStore.getState().toggleInfoPanel()}
+      title={collapsed ? t('panel.expand') : t('panel.collapse')}
+      aria-expanded={!collapsed}
+    >
+      {collapsed ? '«' : '»'}
+    </button>
+  )
+}
+
 export const InfoPanel: React.FC = () => {
   const selectedId = useStore((s) => s.selectedId)
   const mode = useStore((s) => s.mode)
+  const collapsed = useStore((s) => s.infoCollapsed)
   const hiddenHas = useStore((s) => (selectedId ? s.hiddenIds.has(selectedId) : false))
   const [expanded, setExpanded] = useState(false)
   const { t, pName, pField, sysName } = useI18n()
   const part = selectedId ? PART_MAP.get(selectedId) : null
 
+  if (collapsed) {
+    return (
+      <aside className="info-panel collapsed">
+        <FoldButton collapsed />
+      </aside>
+    )
+  }
+
   if (!part) {
     return (
       <aside className="info-panel dim">
+        <FoldButton collapsed={false} />
         <h2>{t('info.learningPanel')}</h2>
         <p className="muted">{t('info.emptyHint')}</p>
         <ul className="hint-list">
@@ -31,6 +55,7 @@ export const InfoPanel: React.FC = () => {
   const simplified = pField(part, 'simplified')
   return (
     <aside className="info-panel">
+      <FoldButton collapsed={false} />
       <div className="sys-chip" style={{ background: sys.color }}>
         {sysName(sys.id, sys.name)}
       </div>

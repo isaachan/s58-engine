@@ -111,6 +111,10 @@ const en: Dict = {
   'explore.reassemblyDone': 'reassembly done',
   'explore.exportCsv': 'Export progress report (CSV)',
 
+  // panel fold/unfold
+  'panel.collapse': 'Collapse panel',
+  'panel.expand': 'Expand panel',
+
   // simulation common
   'sim.start': '▶ Start engine',
   'sim.stop': '■ Stop engine',
@@ -290,6 +294,9 @@ const zh: Dict = {
   'explore.teardownDone': '拆解完成',
   'explore.reassemblyDone': '组装完成',
   'explore.exportCsv': '导出进度报告（CSV）',
+
+  'panel.collapse': '折叠面板',
+  'panel.expand': '展开面板',
 
   'sim.start': '▶ 启动发动机',
   'sim.stop': '■ 停止发动机',

@@ -56,8 +56,9 @@ body {
   color: #fff; font-weight: 800; font-size: 18px; letter-spacing: 1px;
   padding: 6px 10px; border-radius: 6px;
 }
-.brand-title { font-weight: 600; font-size: 15px; }
-.brand-sub { font-size: 11px; color: var(--muted); }
+/* fixed line-height: zh-CN font fallback has taller metrics and would change the bar height */
+.brand-title { font-weight: 600; font-size: 15px; line-height: 18px; }
+.brand-sub { font-size: 11px; color: var(--muted); line-height: 13px; }
 
 .mode-tabs { display: flex; gap: 4px; }
 .mode-tabs button {
@@ -72,6 +73,7 @@ body {
 .dual-label { display: inline-grid; }
 .dual-label > span { grid-area: 1 / 1; white-space: nowrap; text-align: center; }
 .dual-label .ghost { visibility: hidden; }
+.brand .dual-label > span { text-align: left; }
 .mode-tabs .theme-toggle { margin-left: 8px; border-color: var(--border); }
 
 .lang-switch { display: flex; margin-left: 10px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
@@ -85,8 +87,22 @@ body {
 /* ---------- side panel (left) ---------- */
 .side-panel {
   width: 280px; background: var(--panel); border-right: 1px solid var(--border);
-  overflow-y: auto; flex-shrink: 0;
+  flex-shrink: 0; display: flex; flex-direction: column;
 }
+.side-panel .panel-scroll { overflow-y: auto; min-height: 0; flex: 1; }
+
+/* fold/unfold handle shared by both panels */
+.panel-fold {
+  flex-shrink: 0; width: 22px; height: 22px; padding: 0; line-height: 1;
+  background: var(--panel-2); color: var(--muted); font-size: 13px;
+  border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+}
+.panel-fold:hover { color: var(--text); border-color: var(--accent); }
+.side-panel .panel-fold { align-self: flex-end; margin: 8px 8px 0 0; }
+.info-panel .panel-fold { align-self: flex-start; }
+.side-panel.collapsed, .info-panel.collapsed { width: 34px; }
+.side-panel.collapsed .panel-fold, .info-panel.collapsed .panel-fold { align-self: center; margin: 8px 0 0 0; }
+.info-panel.collapsed { padding: 0; }
 .side-content { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .side-content h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
 

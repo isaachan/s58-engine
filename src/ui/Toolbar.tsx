@@ -59,8 +59,8 @@ export const TopBar: React.FC = () => {
       <div className="brand">
         <span className="brand-badge">S58</span>
         <div>
-          <div className="brand-title">{t('brand.title')}</div>
-          <div className="brand-sub">{t('brand.sub')}</div>
+          <div className="brand-title"><DualLabel k="brand.title" /></div>
+          <div className="brand-sub"><DualLabel k="brand.sub" /></div>
         </div>
       </div>
       <nav className="mode-tabs">

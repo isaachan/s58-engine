@@ -74,6 +74,8 @@ interface State {
   lang: Lang
   /** engine running state for the simulation modes (flow/combust/stress) */
   engineRunning: boolean
+  sideCollapsed: boolean
+  infoCollapsed: boolean
 
   setMode: (m: Mode) => void
   select: (id: string | null) => void
@@ -95,6 +97,8 @@ interface State {
   setSimTimeScale: (v: number) => void
   toggleTheme: () => void
   setLang: (l: Lang) => void
+  toggleSidePanel: () => void
+  toggleInfoPanel: () => void
   toggleEngine: () => void
   flash: (f: Omit<Feedback, 'ts'>) => void
 
@@ -147,6 +151,8 @@ export const useStore = create<State>((set, get) => ({
   theme: (localStorage.getItem('s58-theme') as 'dark' | 'light') || 'dark',
   lang: (localStorage.getItem('s58-lang') as Lang) || 'en',
   engineRunning: false,
+  sideCollapsed: localStorage.getItem('s58-side-collapsed') === '1',
+  infoCollapsed: localStorage.getItem('s58-info-collapsed') === '1',
 
   setMode: (m) => {
     const base = {
@@ -219,6 +225,16 @@ export const useStore = create<State>((set, get) => ({
     localStorage.setItem('s58-lang', l)
     set({ lang: l })
   },
+  toggleSidePanel: () =>
+    set((s) => {
+      localStorage.setItem('s58-side-collapsed', s.sideCollapsed ? '0' : '1')
+      return { sideCollapsed: !s.sideCollapsed }
+    }),
+  toggleInfoPanel: () =>
+    set((s) => {
+      localStorage.setItem('s58-info-collapsed', s.infoCollapsed ? '0' : '1')
+      return { infoCollapsed: !s.infoCollapsed }
+    }),
   flash: (f) => {
     set({ feedback: { ...f, ts: Date.now() } })
     setTimeout(() => {
