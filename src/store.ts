@@ -325,7 +325,7 @@ export const useStore = create<State>((set, get) => ({
     if (s.mode !== 'quiz' || s.quizAnswered) return
     const q = QUIZ_QUESTIONS[s.quizIndex]
     if (!q || q.kind !== 'identify') return
-    if (clickedId === q.targetPartId) {
+    if (clickedId === q.targetPartId || q.altTargetIds?.includes(clickedId)) {
       set({ quizScore: s.quizScore + 1, quizAnswered: true })
       get().flash({ kind: 'ok', text: t(lang, 'fb.correct') })
     } else {

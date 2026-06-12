@@ -4,8 +4,10 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 'q1',
     kind: 'identify',
-    prompt: 'Click the component that raises fuel pressure to ~350 bar for direct injection.',
+    prompt:
+      'Click a component that raises fuel pressure to ~350 bar for direct injection (the S58 has two of them).',
     targetPartId: 'hp-fuel-pump',
+    altTargetIds: ['hp-fuel-pump-2'],
   },
   {
     id: 'q2',
@@ -64,9 +66,9 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 'q8',
     kind: 'choice',
-    prompt: 'What drives the high-pressure fuel pump on the S58?',
+    prompt: 'What drives the two high-pressure fuel pumps on the S58?',
     options: [
-      'A lobe on the exhaust camshaft',
+      'Triple-lobe cams on the exhaust camshaft',
       'The accessory belt',
       'An electric motor',
       'The timing chain directly',

@@ -956,6 +956,72 @@ const OilPump: Builder = ({ material }) => (
   </group>
 )
 
+const Valvetronic: Builder = ({ material }) => (
+  <group>
+    {/* eccentric shaft */}
+    <mesh material={material} rotation={[0, 0, Math.PI / 2]}>
+      <cylinderGeometry args={[0.032, 0.032, 2.9, 12]} />
+    </mesh>
+    {/* eccentric lobes + intermediate lever pairs per cylinder */}
+    {CYLS.map((x, i) => (
+      <group key={x}>
+        <mesh material={material} position={[x, 0, 0]} rotation={[(i % 3) * 0.7, 0, Math.PI / 2]} scale={[1, 1, 1.35]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.06, 12]} />
+        </mesh>
+        <mesh material={material} position={[x, -0.07, -0.04]} rotation={[0.5, 0, 0]}>
+          <boxGeometry args={[0.05, 0.12, 0.03]} />
+        </mesh>
+      </group>
+    ))}
+    {/* servo motor at the front */}
+    <group position={[-1.62, -0.02, 0]}>
+      <mesh material={material} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.06, 0.06, 0.22, 14]} />
+      </mesh>
+      <RoundedBox material={material} args={[0.1, 0.12, 0.12]} radius={0.02} position={[0.13, 0, 0]} />
+    </group>
+    {/* shaft position sensor */}
+    <mesh material={material} position={[1.5, 0.05, 0]}>
+      <cylinderGeometry args={[0.03, 0.03, 0.06, 10]} />
+    </mesh>
+  </group>
+)
+
+const ElectricPump: Builder = ({ material }) => (
+  <group>
+    {/* pump body */}
+    <mesh material={material} rotation={[0, 0, Math.PI / 2]}>
+      <cylinderGeometry args={[0.09, 0.09, 0.2, 18]} />
+    </mesh>
+    {/* electronics end cap with connector */}
+    <mesh material={material} position={[0.13, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+      <cylinderGeometry args={[0.075, 0.09, 0.06, 18]} />
+    </mesh>
+    <RoundedBox material={material} args={[0.06, 0.05, 0.08]} radius={0.012} position={[0.15, 0.07, 0]} />
+    {/* inlet / outlet stubs */}
+    <Tube material={material} r={0.03} pts={[[-0.1, 0.04, 0.05], [-0.16, 0.1, 0.12], [-0.18, 0.12, 0.22]]} seg={8} />
+    <Tube material={material} r={0.03} pts={[[-0.12, -0.02, 0.0], [-0.2, -0.04, 0.08], [-0.26, -0.04, 0.16]]} seg={8} />
+    {/* mounting bracket */}
+    <RoundedBox material={material} args={[0.16, 0.03, 0.1]} radius={0.01} position={[0, -0.1, 0]} />
+  </group>
+)
+
+const OilNozzles: Builder = ({ material }) => (
+  <group>
+    {CYLS.map((x) => (
+      <group key={x} position={[x, 0, 0]}>
+        {/* mounting boss with banjo bolt */}
+        <mesh material={material}>
+          <cylinderGeometry args={[0.035, 0.035, 0.05, 10]} />
+        </mesh>
+        <Bolt material={material} p={[0, 0.035, 0]} r={0.018} h={0.02} />
+        {/* spray tube curving up toward the piston underside */}
+        <Tube material={material} r={0.012} pts={[[0, 0.02, 0], [0.02, 0.08, -0.08], [0.03, 0.16, -0.14]]} seg={8} />
+      </group>
+    ))}
+  </group>
+)
+
 export const BUILDERS: Record<string, Builder> = {
   block: Block,
   head: Head,
@@ -979,4 +1045,7 @@ export const BUILDERS: Record<string, Builder> = {
   oilFilter: OilFilter,
   oilPan: OilPan,
   oilPump: OilPump,
+  valvetronic: Valvetronic,
+  electricPump: ElectricPump,
+  oilNozzles: OilNozzles,
 }

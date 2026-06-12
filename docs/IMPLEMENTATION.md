@@ -327,7 +327,7 @@ so they repaint on language change.
 No automated tests yet. The proven manual check (used during development) is driving the app
 headless with `playwright-core` against the installed Chrome (`channel: 'chrome'`): load,
 switch every mode, click parts, drag a tray part onto the engine, and assert side-panel text
-("Step 2 of 29", "Installed 1 of 29") plus screenshots. Minimum bar before merging:
+("Step 2 of 33", "Installed 1 of 33") plus screenshots. Minimum bar before merging:
 
 1. `npx tsc --noEmit` and `npm run build` are clean.
 2. All five modes load without console errors.

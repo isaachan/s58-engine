@@ -59,6 +59,8 @@ export interface QuizQuestion {
   prompt: string
   /** identify: the part the trainee must click */
   targetPartId?: string
+  /** identify: additional part ids that also count as correct (e.g. twin pumps) */
+  altTargetIds?: string[]
   /** choice: options (part ids or strings) and correct index */
   options?: string[]
   correctIndex?: number

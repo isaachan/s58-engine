@@ -19,7 +19,7 @@ Targets desktop Chrome/Edge with mouse + keyboard.
 |---|---|
 | **Explore** | Free inspection. Click to select, double-click to focus the camera, drag a selected part away from the assembly, hide/reset parts. Inspected parts count toward progress. |
 | **Exploded View** | Animated full-engine explosion. Isolate any of the 10 systems (block, head/valvetrain, rotating assembly, timing, turbo, intake, exhaust, cooling, lubrication, fuel); other systems fade. |
-| **Guided Teardown** | 29-step removal sequence. The next part pulses green; out-of-sequence attempts are rejected with the dependency that blocks them, and mistakes are counted. |
+| **Guided Teardown** | 33-step removal sequence. The next part pulses green; out-of-sequence attempts are rejected with the dependency that blocks them, and mistakes are counted. |
 | **Reassembly** | Starts from a bare block. Pick parts from the tray, drag them onto the engine; they snap when close and validate against reverse-teardown order. Attempts and mistakes are recorded. |
 | **Assessment** | 10-question quiz mixing click-to-identify (in the 3D view) and multiple-choice service knowledge. Scores, time, and missed topics are saved. |
 | **Flow** | Lumped-parameter (1D) fluid dynamics: rpm/throttle sliders drive a gas/thermal model; intake, exhaust, coolant, and oil circuits animate as particle streams with live readouts (MAF, boost, turbo speed, coolant ΔT, oil pressure…). |
@@ -43,7 +43,7 @@ section of [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) for how to add anoth
 
 ## Architecture
 
-- `src/data/parts.ts` — part catalog: 28 selectable parts with system, function, location,
+- `src/data/parts.ts` — part catalog: 34 selectable parts with system, function, location,
   inspection notes, wear points, dependencies, and removal order. Training logic is data-driven
   from this file.
 - `src/data/quiz.ts` — assessment items.

@@ -74,32 +74,45 @@ Verdict legend: ✅ accurate · ⚠️ partially right / misleading · 📍 wron
 
 ---
 
-## A. Parts that don't exist / are misrepresented as modeled
+## A. Parts that don't exist / are misrepresented as modeled — ✅ FIXED
 
 1. **HP Fuel Pump — "two HPFPs on later variants; one is modeled here."** Wrong on both counts:
    the S58 has **two** high-pressure pumps **from launch / as standard**, operating in parallel
    (alternating every 30 s, simultaneous at high load), each driven by **triple-lobe** cams so
-   the pair delivers every 60°. **[ST1926 §10.1, §10.3]**. The `simplified` note should be
-   corrected and a second pump (`hp-fuel-pump-2`) added.
+   the pair delivers every 60°. **[ST1926 §10.1, §10.3]**.
+   **Fixed:** part renamed *High-Pressure Fuel Pump 1* with corrected function text;
+   `hp-fuel-pump-2` added; exhaust-camshaft description updated to "two pumps via triple-lobe
+   cams"; quiz q1/q8 updated (either pump accepted as a correct click).
 2. **Throttle body as primary air-metering device.** The throttle exists but is secondary;
    the S58 meters load with **Valvetronic** intake-valve lift. **[ST1926 §5.2.2]**.
+   **Fixed:** function text now states the throttle is normally wide open and load is metered
+   by Valvetronic.
 3. **Coolant pump "circulates coolant through … charge-cooler circuits."** The charge-air
    cooler is on a **separate low-temperature circuit with its own electric pump**; the main
    pump does not serve it. **[ST1926 §11.2.2]**.
+   **Fixed:** main pump description corrected; intake-manifold text now describes the separate
+   LT circuit; `coolant-pump-electric` added as a part.
 
 ## B. Missing parts (present on the real S58, absent from the model)
 
-1. **Valvetronic** — variable intake-valve-lift system (eccentric shaft, servo motor,
-   intermediate arms). A headline S58 feature. **[ST1926 §5.2.2]**, [BM]. *(Engine-relevant —
-   recommend adding.)*
-2. **Second high-pressure fuel pump** (`HP pump 2` + `volume control valve 2`). **[ST1926 §10]**.
-3. **Piston oil-spray cooling nozzles** (map/relay-valve controlled). **[ST1926 §7.6–7.7]**.
-4. **Indirect charge-air-cooler low-temperature circuit** as distinct parts: electric coolant
-   pump (charge air), low-temperature radiator(s), charge-air coolant expansion tank.
-   **[ST1926 §11.2.2]**.
+1. **Valvetronic** — ✅ **added** (`valvetronic`: eccentric shaft, intermediate levers, servo
+   motor as one assembly; teardown step 16). **[ST1926 §5.2.2]**, [BM].
+2. **Second high-pressure fuel pump** — ✅ **added** (`hp-fuel-pump-2`, teardown step 6).
+   **[ST1926 §10]**. *Remark:* the volume control valves are part of each pump assembly, not
+   separate parts.
+3. **Piston oil-spray cooling nozzles** — ✅ **added** (`oil-spray-nozzles`, ×6 + relay valve as
+   one service set; teardown step 26). **[ST1926 §7.6–7.7]**.
+4. **Indirect charge-air-cooler low-temperature circuit** — ✅ **partially added**: the on-engine
+   electric coolant pump (`coolant-pump-electric`, teardown step 22) is modeled; the LT
+   radiators and expansion tank are off-engine (vehicle side) and remain unmodeled, documented
+   in the part's `simplified` note. **[ST1926 §11.2.2]**.
 5. **Turbocharger cooling circuit** (after-run coolant flow to the turbos). **[ST1926 §11.2.1]**.
-6. **Vacuum pump** (brake-booster vacuum). **[ST1926 §9]**.
-7. *(Vehicle-level / arguably out of MVP scope)* engine & transmission oil coolers
+   *Deliberately not modeled:* it is plumbing within existing circuits, not a discrete
+   serviceable part at this model's granularity.
+6. **Vacuum pump** (brake-booster vacuum). **[ST1926 §9]**. *Deliberately not modeled:* exact
+   mounting location not confirmed from available sources; adding it with a guessed position
+   would introduce a new inaccuracy. Revisit with ST1926 §9.1.1 figure access.
+7. *(Vehicle-level / out of MVP scope — unchanged)* engine & transmission oil coolers
    (**[ST1926 §11.1]**), carbon canister / tank-ventilation (**[ST1926 §8.1.5]**), ignition
    coils & spark plugs, belt drive / alternator / accessories (**[ST1926 §6]**), low-pressure
    in-tank fuel pump (**[ST1926 §10.2]**), catalytic converters / OPF / downpipes
@@ -109,11 +122,10 @@ Verdict legend: ✅ accurate · ⚠️ partially right / misleading · 📍 wron
 
 1. **Turbochargers (`turbo-front`, `turbo-rear`).** Function and 1–3 / 4–6 split are correct,
    but the real units mount **low on the exhaust side and close together**; the model spreads
-   them front/rear at mid-height. Stylised, acceptable for training but not literal.
-   **[ST1926 §8.2.2]**, [BM].
-2. **HP Fuel Pump location.** Modeled at the *rear* of the head; on the B58/S58 the
-   cam-driven HP pump(s) sit toward the **front-top** of the head. Low confidence — flag.
-   **[ST1926 §10]**.
+   them front/rear at mid-height. Stylised — **left as-is intentionally**: the spread placement
+   keeps both selectable and visually distinct for training. **[ST1926 §8.2.2]**, [BM].
+2. **HP Fuel Pump location.** Was modeled at the *rear* of the head. ✅ **Fixed:** both pumps
+   now sit at the **front-top** of the head, driven by the exhaust camshaft. **[ST1926 §10]**.
 
 ## D. Verified correct (no change needed)
 
@@ -127,5 +139,6 @@ simulation (`src/sim/engineCycle.ts`) — **2993 cc, 84.0 × 90.0 mm, 9.3:1** �
 
 ---
 
-*Audit date: 2026-06-12. Primary source: BMW ST1926 (9/2019). Reconcile this file with
-`src/data/parts.ts` if part metadata changes.*
+*Audit date: 2026-06-12. Primary source: BMW ST1926 (9/2019). Fixes applied 2026-06-12:
+sections A and C resolved; section B items 1–4 added to the model (catalog now 34 parts,
+33-step teardown). Reconcile this file with `src/data/parts.ts` if part metadata changes.*

@@ -52,7 +52,8 @@ const PARTS_ZH: Record<string, PartZh> = {
   },
   'camshaft-intake': {
     name: '进气凸轮轴',
-    function: '通过滚子摇臂驱动进气门。由 VANOS 单元调相以实现可变气门正时。',
+    function:
+      '通过滚子摇臂驱动进气门。由 VANOS 单元调相实现可变气门正时；进气门升程另由 Valvetronic 系统连续调节。',
     location: '进气侧（本模型缸盖的 +Z 侧），位于气门室盖下方。',
     inspectionNotes:
       '检查凸轮表面是否点蚀、轴承座是否拉伤。凸轮轴承盖须均匀紧固：受力不均会导致轴体开裂。',
@@ -60,10 +61,10 @@ const PARTS_ZH: Record<string, PartZh> = {
   },
   'camshaft-exhaust': {
     name: '排气凸轮轴',
-    function: '驱动排气门，并通过后端专用驱动凸轮带动高压燃油泵。',
+    function: '驱动排气门，并通过三联凸轮带动两个高压燃油泵，两组凸轮错相布置使泵每旋转 60° 供油一次。',
     location: '缸盖排气侧（本模型的 -Z 侧），位于气门室盖下方。',
     inspectionNotes:
-      '检查后端高压泵驱动凸轮：其接触负荷很高。拆卸前对照锁止工具位置核对正时标记。',
+      '检查三联高压泵驱动凸轮：其接触负荷很高。拆卸前对照锁止工具位置核对正时标记。',
   },
   crankshaft: {
     name: '曲轴',
@@ -137,7 +138,7 @@ const PARTS_ZH: Record<string, PartZh> = {
   'intake-manifold': {
     name: '进气歧管（含中冷器）',
     function:
-      '将压缩空气分配到全部六个气缸。S58 进气室集成了水-空中冷器，取代独立的前置中冷器。',
+      '将压缩空气分配到全部六个气缸。进气室集成间接式水-空中冷器，由独立的低温冷却回路供给（专用电动水泵、散热器和膨胀水壶），与发动机主冷却回路分开。',
     location: '气缸盖进气侧（+Z），横跨全部六个进气口。',
     inspectionNotes:
       '检查中冷器芯体是否有冷却液渗漏，并对低温回路做压力测试。安装时更换进气道密封件。',
@@ -146,7 +147,8 @@ const PARTS_ZH: Record<string, PartZh> = {
   },
   'throttle-body': {
     name: '节气门体',
-    function: '电子控制的阀门，计量进入进气室的空气流量。',
+    function:
+      '位于进气室入口的电控阀门。S58 主要通过 Valvetronic 进气门升程控制负荷，因此节气门通常保持全开，主要作为备用控制和增压/滑行工况使用。',
     location: '进气歧管前端，由增压管供气。',
     inspectionNotes: '检查节气门轴间隙和积碳。重新安装后执行 DME 节气门自适应。',
   },
@@ -167,16 +169,54 @@ const PARTS_ZH: Record<string, PartZh> = {
     simplified: '六个喷油器建模为一个维修组件。',
   },
   'hp-fuel-pump': {
-    name: '高压燃油泵',
-    function: '凸轮驱动的柱塞泵，将燃油压力从约 5 bar 提升到高达 350 bar 以供直喷。',
-    location: '气缸盖后端，由排气凸轮轴上的凸轮驱动。',
+    name: '高压燃油泵 1',
+    function:
+      '两个凸轮驱动柱塞泵之一（S58 标配两个），将燃油压力从约 5 bar 提升到高达 350 bar。两泵并联工作：中等负荷下每 30 秒交替运行，全负荷时同时供油。',
+    location: '气缸盖顶部前方，由排气凸轮轴上的三联凸轮驱动。',
     inspectionNotes:
       '拆卸前将驱动凸轮置于基圆位置。检查滚子挺柱磨损并更换 O 形圈。断开前泄压。',
-    simplified: '后期型号的 S58 有两个高压泵；此处建模一个。',
+  },
+  'hp-fuel-pump-2': {
+    name: '高压燃油泵 2',
+    function:
+      '两个并联高压泵中的第二个。两组三联驱动凸轮错相布置，使泵组每旋转 60° 输出一次压力脉冲。',
+    location: '气缸盖顶部、1 号泵后方，由排气凸轮轴上独立的三联凸轮驱动。',
+    inspectionNotes: '操作与 1 号泵相同。更换任一泵后，应在两个流量控制阀循环工作时验证油轨压力合理性。',
+  },
+  valvetronic: {
+    name: 'Valvetronic（可变气门升程）',
+    function:
+      '由偏心轴、中间摇臂和伺服电机组成，连续调节进气门升程。这是 S58 的主要负荷控制方式 —— 发动机通过气门“呼吸”，而非节流进气。',
+    location: '气门室盖下方、进气凸轮轴上方；伺服电机位于缸盖前端。',
+    inspectionNotes:
+      '检查中间摇臂导轨和偏心轴传感器。任何作业后执行 Valvetronic 限位自适应。中间摇臂分级配对，不得互换位置。',
+    failurePoints: '中间摇臂轴承磨损导致怠速不稳；伺服电机齿轮磨损。',
+    simplified: '偏心轴、摇臂、弹簧和伺服电机建模为一个总成。',
+  },
+  'coolant-pump-electric': {
+    name: '电动水泵（中冷回路）',
+    function:
+      '独立低温回路的电动泵，为进气室内的中冷器供给冷却液。与发动机主水泵和主散热器相互独立。',
+    location: '发动机前端进气侧，与进气歧管的中冷器接口相连。',
+    inspectionNotes:
+      '通过诊断激活并确认流动声。使用服务功能为低温回路排气 —— 残留空气会导致热浸和赛道工况功率下降。',
+    failurePoints: '泵电子故障表现为持续负荷下进气温度升高。',
+    simplified: '低温散热器和膨胀水壶位于车身侧，未建模。',
+  },
+  'oil-spray-nozzles': {
+    name: '活塞机油喷嘴（×6）',
+    function:
+      '由 MAP 控制的喷油嘴，向活塞底部喷射机油以冷却活塞顶。经继电阀切换，仅在活塞温度需要时喷射。',
+    location: '曲轴箱底部，每缸一个，朝活塞冷却油道向上喷射。',
+    inspectionNotes:
+      '确认每个喷嘴紧固且油道畅通 —— 喷嘴堵塞或弯曲会使单缸过热。用诊断测试检查继电阀动作。',
+    failurePoints: '喷嘴堵塞会在高负荷下导致单缸活塞损坏。',
+    simplified: '六个喷嘴与继电阀建模为一个维修组件。',
   },
   'water-pump': {
     name: '冷却液泵',
-    function: '使冷却液在缸体、缸盖和中冷器回路中循环。',
+    function:
+      '使冷却液在缸体和缸盖（主回路）中循环。中冷器不在此回路上 —— 它有自己的低温回路和专用电动泵。',
     location: '发动机前端，进气侧偏低位置，皮带/电动驱动。',
     inspectionNotes: '检查泄漏孔是否有结晶的冷却液痕迹，以及轴承是否有间隙。',
     failurePoints: '轴承和油封磨损：渗漏先于失效出现。',
@@ -231,7 +271,7 @@ const CIRCUITS_ZH: Record<string, string> = {
 
 /** quiz prompt + option overrides, keyed by question id */
 const QUIZ_ZH: Record<string, { prompt: string; options?: string[] }> = {
-  q1: { prompt: '单击将燃油压力提升到约 350 bar 以供直喷的部件。' },
+  q1: { prompt: '单击将燃油压力提升到约 350 bar 以供直喷的部件之一（S58 有两个）。' },
   q2: { prompt: '单击由 1–3 缸供气的涡轮增压器。' },
   q3: {
     prompt: 'S58 的中冷器位于何处？',
@@ -248,8 +288,8 @@ const QUIZ_ZH: Record<string, { prompt: string; options?: string[] }> = {
   },
   q7: { prompt: '单击包含机油集滤网的部件 —— 检查下端碎屑之处。' },
   q8: {
-    prompt: 'S58 的高压燃油泵由什么驱动？',
-    options: ['排气凸轮轴上的一个凸轮', '附件皮带', '电动机', '正时链直接驱动'],
+    prompt: 'S58 的两个高压燃油泵由什么驱动？',
+    options: ['排气凸轮轴上的三联凸轮', '附件皮带', '电动机', '正时链直接驱动'],
   },
   q9: {
     prompt: '拆解时，哪个必须先于进气歧管拆下？',
