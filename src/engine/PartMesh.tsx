@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame, useThree, ThreeEvent } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
@@ -71,6 +71,18 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
   const isolatedOut = isolatedSystem !== null && def.system !== isolatedSystem
   const goneInReassembly = mode === 'reassembly' && removed && !carrying
   const visible = !hidden && !goneInReassembly
+  // The block is never removed but encloses the rotating assembly. During
+  // teardown/reassembly, ghost it and let clicks pass through so the pistons
+  // and crankshaft inside it can actually be seen and selected.
+  const enclosingGhost = def.removalOrder === -1 && (mode === 'disassembly' || mode === 'reassembly')
+
+  useEffect(() => {
+    const noop = () => null
+    group.current?.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (mesh.isMesh) mesh.raycast = (enclosingGhost ? noop : THREE.Mesh.prototype.raycast) as THREE.Mesh['raycast']
+    })
+  }, [enclosingGhost])
 
   // Target position
   const target = useMemo(() => {
@@ -143,9 +155,11 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
               : 0.5
             : isolatedOut
               ? 0.08
-              : mode === 'disassembly' && removed
-                ? 0.3
-                : 1
+              : enclosingGhost
+                ? 0.16
+                : mode === 'disassembly' && removed
+                  ? 0.3
+                  : 1
     m.opacity += (targetOpacity - m.opacity) * Math.min(1, dt * 8)
     m.depthWrite = m.opacity > 0.5
   })

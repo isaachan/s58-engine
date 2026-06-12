@@ -74,6 +74,7 @@ const en: Dict = {
   'dis.completeBody': 'The engine is stripped to the bare block. Switch to Reassembly to rebuild it.',
   'dis.startReassembly': 'Start reassembly →',
   'dis.removeNext': 'Remove next (highlighted green):',
+  'dis.removeBtn': 'Remove this part ▸',
   'dis.fullSequence': 'Full sequence',
   'dis.restart': 'Restart teardown',
 
@@ -258,6 +259,7 @@ const zh: Dict = {
   'dis.completeBody': '发动机已拆解到裸缸体。切换到“重新组装”进行复原。',
   'dis.startReassembly': '开始组装 →',
   'dis.removeNext': '拆下一个（绿色高亮）：',
+  'dis.removeBtn': '拆下该零件 ▸',
   'dis.fullSequence': '完整顺序',
   'dis.restart': '重新开始拆解',
 

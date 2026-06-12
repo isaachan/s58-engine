@@ -264,9 +264,14 @@ no audio dependency.
 - **Explore**: click → `select` → InfoPanel + `markInspected` (progress). Drag → `offsets`.
   Hide/isolate/explode → visibility flags. Reset all → clears the three of them.
 - **Exploded**: `exploded=true` forced on entry; isolation panel sets `isolatedSystem`.
-- **Teardown**: green pulse on `REMOVAL_SEQUENCE[disasmStep]` → click → `attemptRemove` →
+- **Teardown**: green pulse on `REMOVAL_SEQUENCE[disasmStep]` → click (or the panel's
+  "Remove this part" button, which calls `attemptRemove` on the current step's id) →
   correct: part flies to parked pose, step++; wrong: mistake++, toast explains blockers.
-  Completion writes `disassemblyCompleted` + mistakes to progress.
+  Completion writes `disassemblyCompleted` + mistakes to progress. Note: the cylinder block
+  (`removalOrder: -1`) is never removed but encloses the pistons and crankshaft, so in
+  teardown/reassembly `PartMesh` ghosts it (`enclosingGhost`, opacity 0.16) and disables its
+  meshes' raycast so clicks reach the parts inside. The button guarantees the procedure is
+  completable regardless of occlusion or camera angle.
 - **Reassembly**: entry marks every sequenced part removed (attempt++ in progress). Tray click
   → `pickUpRemoved` (part appears staged near its exploded pose) → drag within 0.5 of home →
   `attemptPlace` → snap or reject. Completion writes `reassemblyCompleted` + mistakes.

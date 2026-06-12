@@ -60,6 +60,9 @@ const DisassemblyPanel: React.FC = () => {
           <span className="step-label">{t('dis.removeNext')}</span>
           <strong>{pName(current)}</strong>
           <p className="small">{pField(current, 'inspectionNotes')}</p>
+          <button className="primary" onClick={() => useStore.getState().attemptRemove(current.id)}>
+            {t('dis.removeBtn')}
+          </button>
         </div>
       )}
       <details className="seq-details">
