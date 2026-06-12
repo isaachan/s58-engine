@@ -68,6 +68,7 @@ interface State {
   simRpm: number
   simLoad: number
   simTimeScale: number
+  theme: 'dark' | 'light'
 
   setMode: (m: Mode) => void
   select: (id: string | null) => void
@@ -87,6 +88,7 @@ interface State {
   setSimRpm: (v: number) => void
   setSimLoad: (v: number) => void
   setSimTimeScale: (v: number) => void
+  toggleTheme: () => void
   flash: (f: Omit<Feedback, 'ts'>) => void
 
   attemptRemove: (id: string) => void
@@ -135,6 +137,7 @@ export const useStore = create<State>((set, get) => ({
   simRpm: 2400,
   simLoad: 0.8,
   simTimeScale: 0.05,
+  theme: (localStorage.getItem('s58-theme') as 'dark' | 'light') || 'dark',
 
   setMode: (m) => {
     const base = {
@@ -195,6 +198,12 @@ export const useStore = create<State>((set, get) => ({
   setSimRpm: (v) => set({ simRpm: v }),
   setSimLoad: (v) => set({ simLoad: v }),
   setSimTimeScale: (v) => set({ simTimeScale: v }),
+  toggleTheme: () =>
+    set((s) => {
+      const theme = s.theme === 'dark' ? 'light' : 'dark'
+      localStorage.setItem('s58-theme', theme)
+      return { theme }
+    }),
   flash: (f) => {
     set({ feedback: { ...f, ts: Date.now() } })
     setTimeout(() => {

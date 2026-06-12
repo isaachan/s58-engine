@@ -56,13 +56,22 @@ The MVP should include:
 
 ### Out of Scope for MVP
 
-- Full fluid dynamics simulation.
-- Full engine combustion simulation.
-- Torque calculation or real-time mechanical stress simulation.
 - VR-only experience.
 - Multiplayer workshop mode.
 - Support for engines other than BMW S58.
 - Direct integration with BMW proprietary diagnostic systems.
+
+### Implemented Beyond MVP (post-MVP additions)
+
+The following were originally out of MVP scope and have since been implemented as
+educational lumped-parameter simulations (not CFD/FEA grade):
+
+- Fluid dynamics simulation: 1D quasi-steady model of the intake, exhaust, coolant, and
+  oil circuits with animated particle flows and live readouts.
+- Engine combustion simulation: crank-angle-resolved cylinder pressure model (Wiebe heat
+  release) with animated rotating assembly, pressure trace, and P–V diagram.
+- Torque and mechanical stress simulation: instantaneous crank torque over the cycle and
+  per-component load utilization shown as a 3D heat map.
 
 ## 6. Key Training Modes
 
@@ -325,6 +334,8 @@ Future support:
 - UI text must be readable on common training-room displays.
 - Important color states must also use shape, icon, or label differences.
 - Core workflows should be usable without audio.
+- The UI must offer both a dark theme (default, for workshop displays) and a light theme
+  (for bright training rooms), switchable at any time.
 
 ### Security and Privacy
 
@@ -380,6 +391,8 @@ Future support:
 - The engine should be the primary visual focus.
 - Controls should be compact and workshop-friendly.
 - Toolbars should use recognizable icons with tooltips.
+- The UI shall provide a light/dark theme switch in the top bar; the theme applies to both
+  the UI panels and the 3D viewport, and the preference persists across sessions.
 - Training instructions should be concise and tied to the current task.
 - The UI should support both free exploration and structured training without changing products.
 

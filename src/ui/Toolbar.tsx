@@ -15,6 +15,7 @@ const MODES: { id: Mode; label: string; icon: string }[] = [
 
 export const TopBar: React.FC = () => {
   const mode = useStore((s) => s.mode)
+  const theme = useStore((s) => s.theme)
   return (
     <header className="top-bar">
       <div className="brand">
@@ -35,6 +36,14 @@ export const TopBar: React.FC = () => {
             <span aria-hidden>{m.icon}</span> {m.label}
           </button>
         ))}
+        <button
+          className="theme-toggle"
+          onClick={() => useStore.getState().toggleTheme()}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label="Toggle light/dark theme"
+        >
+          {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+        </button>
       </nav>
     </header>
   )

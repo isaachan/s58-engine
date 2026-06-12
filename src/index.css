@@ -11,6 +11,23 @@
   --ok: #2eb872;
   --warn: #e8a33d;
   --danger: #e85d4a;
+  --label-bg: rgba(20, 25, 32, 0.88);
+  --bar-bg: rgba(29, 35, 44, 0.92);
+}
+
+[data-theme='light'] {
+  --bg: #e8ecf1;
+  --panel: #f6f8fa;
+  --panel-2: #e4e9ef;
+  --border: #c3cdd8;
+  --text: #1c2530;
+  --muted: #5c6877;
+  --accent: #1f6fe0;
+  --ok: #1d9b5d;
+  --warn: #b97a16;
+  --danger: #cf4632;
+  --label-bg: rgba(246, 248, 250, 0.92);
+  --bar-bg: rgba(246, 248, 250, 0.92);
 }
 
 html, body, #root { height: 100%; }
@@ -49,6 +66,7 @@ body {
 }
 .mode-tabs button:hover { background: var(--panel-2); color: var(--text); }
 .mode-tabs button.active { background: var(--panel-2); border-color: var(--accent); color: var(--text); }
+.mode-tabs .theme-toggle { margin-left: 10px; border-color: var(--border); }
 
 /* ---------- side panel (left) ---------- */
 .side-panel {
@@ -141,7 +159,7 @@ body {
 .bottom-bar {
   position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 6px;
-  background: rgba(29, 35, 44, 0.92); border: 1px solid var(--border);
+  background: var(--bar-bg); border: 1px solid var(--border);
   border-radius: 10px; padding: 6px 10px; backdrop-filter: blur(6px);
   max-width: calc(100% - 24px);
 }
@@ -166,7 +184,7 @@ body {
 
 /* ---------- 3D labels ---------- */
 .part-label {
-  background: rgba(20, 25, 32, 0.88); border: 1px solid var(--accent);
+  background: var(--label-bg); border: 1px solid var(--accent);
   color: var(--text); font-size: 12px; font-family: 'Segoe UI', system-ui, sans-serif;
   padding: 3px 8px; border-radius: 5px; white-space: nowrap;
 }

@@ -231,7 +231,11 @@ then clears the goal on arrival or after 2 s.
 
 ## 7. UI layer (`ui/`)
 
-Pure-DOM React, styled by `index.css` (single file, CSS variables at `:root`). Layout is
+Pure-DOM React, styled by `index.css` (single file, CSS variables at `:root`, with a light
+palette under `[data-theme='light']`). The theme lives in the store (`theme`, persisted under
+the `s58-theme` localStorage key, toggled from the TopBar); `ThemeApplier` in `App.tsx` sets
+`document.documentElement.dataset.theme`, and `EngineScene` maps the same value to scene
+colors (`SCENE_THEME`: background, grid, hemisphere intensity, shadow opacity). Layout is
 fixed: TopBar (brand + mode tabs) / left SidePanel (mode-specific) / center viewport (Canvas +
 floating BottomToolbar + Toast) / right InfoPanel. The SidePanel switches sub-panels on
 `mode`; each sub-panel reads store slices with narrow selectors. No UI component talks to

@@ -47,8 +47,15 @@ const CameraRig: React.FC<{ controls: React.RefObject<OrbitControlsImpl> }> = ({
   return null
 }
 
+const SCENE_THEME = {
+  dark: { bg: '#15191f', cell: '#2a323d', section: '#39434f', hemi: 0.5, shadow: 0.5 },
+  light: { bg: '#dfe5ec', cell: '#c0cad6', section: '#a8b4c2', hemi: 0.75, shadow: 0.3 },
+}
+
 export const EngineScene: React.FC = () => {
   const controls = useRef<OrbitControlsImpl>(null!)
+  const theme = useStore((s) => s.theme)
+  const t = SCENE_THEME[theme]
 
   return (
     <Canvas
@@ -57,12 +64,12 @@ export const EngineScene: React.FC = () => {
       onPointerMissed={() => useStore.getState().select(null)}
       dpr={[1, 2]}
     >
-      <color attach="background" args={['#15191f']} />
+      <color attach="background" args={[t.bg]} />
       <ambientLight intensity={0.35} />
       <directionalLight position={[6, 8, 4]} intensity={1.1} castShadow shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-5, 4, -6]} intensity={0.45} />
       <directionalLight position={[0, -4, 2]} intensity={0.2} />
-      <hemisphereLight args={['#9fb4cc', '#2a2620', 0.5]} />
+      <hemisphereLight args={['#9fb4cc', '#2a2620', t.hemi]} />
 
       {PARTS.map((p) => (
         <PartMesh key={p.id} def={p} />
@@ -73,12 +80,12 @@ export const EngineScene: React.FC = () => {
       <Grid
         position={[0, -3.2, 0]}
         args={[30, 30]}
-        cellColor="#2a323d"
-        sectionColor="#39434f"
+        cellColor={t.cell}
+        sectionColor={t.section}
         fadeDistance={26}
         infiniteGrid
       />
-      <ContactShadows position={[0, -3.18, 0]} opacity={0.5} scale={14} blur={2.2} far={5} />
+      <ContactShadows position={[0, -3.18, 0]} opacity={t.shadow} scale={14} blur={2.2} far={5} />
 
       <OrbitControls
         ref={controls}
