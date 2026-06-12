@@ -210,7 +210,7 @@ const zh: Dict = {
   'lang.title': '切换语言',
 
   'mode.explore': '浏览',
-  'mode.exploded': '爆炸视图',
+  'mode.exploded': '展开视图',
   'mode.disassembly': '引导拆解',
   'mode.reassembly': '重新组装',
   'mode.quiz': '测验',
@@ -218,11 +218,11 @@ const zh: Dict = {
   'mode.combust': '燃烧',
   'mode.stress': '扭矩·应力',
 
-  'bottom.explode': '💥 爆炸',
+  'bottom.explode': '💥 展开',
   'bottom.labels': '🏷 标签',
   'bottom.resetView': '🎥 重置视角',
   'bottom.resetParts': '♻️ 复位零件',
-  'bottom.title.explode': '切换爆炸视图',
+  'bottom.title.explode': '切换展开视图',
   'bottom.title.labels': '切换悬停标签',
   'bottom.title.resetView': '将相机重置到初始位置',
   'bottom.title.resetParts': '将所有零件复位到原始位置',

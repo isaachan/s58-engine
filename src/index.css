@@ -66,6 +66,12 @@ body {
 }
 .mode-tabs button:hover { background: var(--panel-2); color: var(--text); }
 .mode-tabs button.active { background: var(--panel-2); border-color: var(--accent); color: var(--text); }
+.mode-tabs > button { display: inline-flex; align-items: center; gap: 5px; }
+
+/* reserve the width of both language labels so the bar doesn't resize on switch */
+.dual-label { display: inline-grid; }
+.dual-label > span { grid-area: 1 / 1; white-space: nowrap; text-align: center; }
+.dual-label .ghost { visibility: hidden; }
 .mode-tabs .theme-toggle { margin-left: 8px; border-color: var(--border); }
 
 .lang-switch { display: flex; margin-left: 10px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }

@@ -1,7 +1,26 @@
 import React from 'react'
 import { useStore } from '../store'
 import type { Mode } from '../types'
-import { useI18n, LANGS } from '../i18n'
+import { useI18n, LANGS, t as tIn } from '../i18n'
+
+/**
+ * Renders the label in the active language while invisibly reserving the
+ * width of the other language's label, so the top bar keeps the same width
+ * when switching EN ↔ 中文.
+ */
+const DualLabel: React.FC<{ k: string }> = ({ k }) => {
+  const lang = useStore((s) => s.lang)
+  return (
+    <span className="dual-label">
+      <span className={lang === 'en' ? undefined : 'ghost'} aria-hidden={lang !== 'en'}>
+        {tIn('en', k)}
+      </span>
+      <span className={lang === 'zh' ? undefined : 'ghost'} aria-hidden={lang !== 'zh'}>
+        {tIn('zh', k)}
+      </span>
+    </span>
+  )
+}
 
 const MODES: { id: Mode; key: string; icon: string }[] = [
   { id: 'explore', key: 'mode.explore', icon: '🔍' },
@@ -52,7 +71,7 @@ export const TopBar: React.FC = () => {
             onClick={() => useStore.getState().setMode(m.id)}
             title={t(m.key)}
           >
-            <span aria-hidden>{m.icon}</span> {t(m.key)}
+            <span aria-hidden>{m.icon}</span> <DualLabel k={m.key} />
           </button>
         ))}
         <LangSwitch />
@@ -62,7 +81,7 @@ export const TopBar: React.FC = () => {
           title={theme === 'dark' ? t('theme.titleToLight') : t('theme.titleToDark')}
           aria-label="Toggle light/dark theme"
         >
-          {theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
+          {theme === 'dark' ? <DualLabel k="theme.toLight" /> : <DualLabel k="theme.toDark" />}
         </button>
       </nav>
     </header>
