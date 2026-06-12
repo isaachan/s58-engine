@@ -55,6 +55,8 @@ export function computeFlow(engine: EngineDefinition, { rpm, throttle }: FlowInp
   const t = clamp(throttle, 0, 1)
   const spool = smooth((rpm - p.spool.startRpm) / p.spool.spanRpm)
   const boostBar = p.peakBoostBar * t * spool
+  // naturally aspirated engines set peakBoostBar = 0; guard the boost-fraction divisor
+  const boostFrac = p.peakBoostBar > 0 ? boostBar / p.peakBoostBar : 0
   const mapBar = t < 0.05 ? 0.45 + 0.5 * rpmNorm : AMBIENT_BAR * (0.35 + 0.65 * t) + boostBar
 
   const chargeTempC = 25 + boostBar * 26 // air-to-water cooler outlet
@@ -64,13 +66,13 @@ export function computeFlow(engine: EngineDefinition, { rpm, throttle }: FlowInp
   const mafGs = mafKgS * 1000
 
   // mixture: stoich at cruise, enriched under boost
-  const afr = 14.7 - p.afrEnrich * smooth(boostBar / p.peakBoostBar)
+  const afr = 14.7 - p.afrEnrich * smooth(boostFrac)
   const fuelGs = mafGs / afr
   const powerKw = fuelGs * 1e-3 * 43000 * p.brakeEff
 
   const exhaustGs = mafGs + fuelGs
   const exhaustTempC = 480 + 420 * (0.3 * rpmNorm + 0.7 * t)
-  const turboKrpm = 18 + (p.turboMaxKrpm - 18) * Math.sqrt(boostBar / p.peakBoostBar) * (0.55 + 0.45 * t)
+  const turboKrpm = p.peakBoostBar > 0 ? 18 + (p.turboMaxKrpm - 18) * Math.sqrt(boostFrac) * (0.55 + 0.45 * t) : 0
 
   // coolant: mechanical-equivalent pump curve, heat ≈ brake power rejected to coolant
   const coolantLpm = 25 + 215 * rpmNorm
