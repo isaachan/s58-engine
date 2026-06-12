@@ -66,6 +66,14 @@ and animation share these constants) and derives component-stress utilizations (
 Calibration targets: ~430 g/s MAF, ~116 bar peak pressure, ~26 bar IMEP, ~570 N·m / ~430 kW
 at 7200 rpm full load.
 
+All three sim modes share an `engineRunning` store flag (Start/Stop button, `EngineButton`
+in `SidePanel.tsx`; reset to false on every mode change). It gates the sim clock and
+combustion flashes in `SimDriver`, zeroes particle speeds in `FlowParticles`, and drives
+`sim/engineSound.ts` — a Web Audio synthesizer (harmonics of the I6 firing frequency
+`rpm/60×3` through a load-opened lowpass, plus band-passed noise; no audio assets).
+`EngineAudio` in `App.tsx` starts/stops/retunes it from the active mode's rpm/load.
+Oscillator nodes are single-use, so the synth rebuilds its graph on every `start()`.
+
 Animation: `simClock` (module-level mutable, degrees 0–720) is advanced by `SimDriver`
 inside the canvas, scaled by the `simTimeScale` slow-motion slider. `PartMesh.useFrame`
 reads it to rotate crank/damper (1×), cams/VANOS (½×), and stroke the pistons via a

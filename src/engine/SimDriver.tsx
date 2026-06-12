@@ -17,8 +17,18 @@ export const SimDriver: React.FC = () => {
 
   useFrame((_, dt) => {
     const s = useStore.getState()
-    const active = s.mode === 'combust' || s.mode === 'stress'
-    if (!active) return
+    const active = (s.mode === 'combust' || s.mode === 'stress') && s.engineRunning
+    if (!active) {
+      // engine stopped: kill flashes and light, keep the crank where it is
+      flashes.current.forEach((m) => {
+        if (m) {
+          ;(m.material as THREE.MeshBasicMaterial).opacity = 0
+          m.visible = false
+        }
+      })
+      if (light.current) light.current.intensity = 0
+      return
+    }
     // crank degrees advanced this frame, slowed for visibility
     simClock.thetaDeg = (simClock.thetaDeg + s.simRpm * 6 * s.simTimeScale * Math.min(dt, 0.05)) % 720
 

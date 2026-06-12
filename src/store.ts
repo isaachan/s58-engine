@@ -69,6 +69,8 @@ interface State {
   simLoad: number
   simTimeScale: number
   theme: 'dark' | 'light'
+  /** engine running state for the simulation modes (flow/combust/stress) */
+  engineRunning: boolean
 
   setMode: (m: Mode) => void
   select: (id: string | null) => void
@@ -89,6 +91,7 @@ interface State {
   setSimLoad: (v: number) => void
   setSimTimeScale: (v: number) => void
   toggleTheme: () => void
+  toggleEngine: () => void
   flash: (f: Omit<Feedback, 'ts'>) => void
 
   attemptRemove: (id: string) => void
@@ -138,6 +141,7 @@ export const useStore = create<State>((set, get) => ({
   simLoad: 0.8,
   simTimeScale: 0.05,
   theme: (localStorage.getItem('s58-theme') as 'dark' | 'light') || 'dark',
+  engineRunning: false,
 
   setMode: (m) => {
     const base = {
@@ -150,6 +154,7 @@ export const useStore = create<State>((set, get) => ({
       exploded: m === 'exploded',
       carryingId: null,
       feedback: null,
+      engineRunning: false,
     }
     if (m === 'disassembly') {
       set({ ...base, removedIds: new Set(), disasmStep: 0, disasmMistakes: 0 })
@@ -198,6 +203,7 @@ export const useStore = create<State>((set, get) => ({
   setSimRpm: (v) => set({ simRpm: v }),
   setSimLoad: (v) => set({ simLoad: v }),
   setSimTimeScale: (v) => set({ simTimeScale: v }),
+  toggleEngine: () => set((s) => ({ engineRunning: !s.engineRunning })),
   toggleTheme: () =>
     set((s) => {
       const theme = s.theme === 'dark' ? 'light' : 'dark'

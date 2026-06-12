@@ -243,6 +243,7 @@ const FlowPanel: React.FC = () => {
         Lumped-parameter (1D) flow model — quasi-steady gas and thermal balances, not CFD.
         Particle speed tracks computed flow rates.
       </p>
+      <EngineButton />
       <label className="slider-row">
         <span>Engine speed</span>
         <input
@@ -324,12 +325,25 @@ const SimCanvas: React.FC<{
   )
 }
 
+const EngineButton: React.FC = () => {
+  const running = useStore((s) => s.engineRunning)
+  return (
+    <button
+      className={`engine-btn ${running ? 'running' : ''}`}
+      onClick={() => useStore.getState().toggleEngine()}
+    >
+      {running ? '■ Stop engine' : '▶ Start engine'}
+    </button>
+  )
+}
+
 const SimControls: React.FC = () => {
   const rpm = useStore((s) => s.simRpm)
   const load = useStore((s) => s.simLoad)
   const ts = useStore((s) => s.simTimeScale)
   return (
     <>
+      <EngineButton />
       <label className="slider-row">
         <span>Engine speed</span>
         <input type="range" min={800} max={7200} step={50} value={rpm}

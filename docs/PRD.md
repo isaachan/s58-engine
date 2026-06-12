@@ -72,6 +72,13 @@ educational lumped-parameter simulations (not CFD/FEA grade):
   release) with animated rotating assembly, pressure trace, and P–V diagram.
 - Torque and mechanical stress simulation: instantaneous crank torque over the cycle and
   per-component load utilization shown as a 3D heat map.
+- Engine start/stop control: each simulation mode (flow, combustion, torque/stress)
+  provides a Start/Stop engine button. While stopped, simulation animation is frozen.
+- Engine audio: while the engine runs, the app plays synthesized engine sound whose pitch
+  follows the firing frequency of the selected engine speed and whose intensity follows
+  load; the sound changes continuously as speed and load sliders move. Audio is generated
+  in the browser (no audio assets, works offline) and is supplementary — all information
+  remains available without sound, per the accessibility requirements.
 
 ## 6. Key Training Modes
 

@@ -199,6 +199,16 @@ body {
 }
 .slider-row strong { color: var(--text); font-size: 13px; }
 
+/* ---------- engine start/stop ---------- */
+.side-content button.engine-btn {
+  background: var(--ok); border-color: var(--ok); color: #fff;
+  font-weight: 700; font-size: 13.5px; padding: 10px 12px; letter-spacing: 0.3px;
+}
+.side-content button.engine-btn.running {
+  background: var(--danger); border-color: var(--danger);
+}
+.side-content button.engine-btn:hover { filter: brightness(1.1); }
+
 /* ---------- sim charts & stress bars ---------- */
 .sim-chart { display: flex; flex-direction: column; gap: 4px; }
 .sim-chart canvas {

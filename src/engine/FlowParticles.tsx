@@ -96,6 +96,7 @@ export const FlowParticles: React.FC = () => {
   const rpm = useStore((s) => s.flowRpm)
   const throttle = useStore((s) => s.flowThrottle)
   const circuits = useStore((s) => s.flowCircuits)
+  const running = useStore((s) => s.engineRunning)
 
   const flow = useMemo(() => computeFlow({ rpm, throttle }), [rpm, throttle])
 
@@ -105,7 +106,7 @@ export const FlowParticles: React.FC = () => {
       {CIRCUITS.filter((c) => circuits.has(c.id)).map((c) => (
         <group key={c.id}>
           <CircuitGuide def={c} />
-          <Circuit def={c} speed={flow[SPEED_KEY[c.id]] as number} />
+          <Circuit def={c} speed={running ? (flow[SPEED_KEY[c.id]] as number) : 0} />
         </group>
       ))}
     </group>
