@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import type { Mode, Progress, QuizResult, SystemId, Vec3 } from './types'
 import { PART_MAP, REMOVAL_SEQUENCE } from './data/parts'
 import { QUIZ_QUESTIONS } from './data/quiz'
+import { t, type Lang } from './i18n/strings'
+import { pName, quizOptions } from './i18n/content'
 
 const STORAGE_KEY = 's58-trainer-progress-v1'
 
@@ -69,6 +71,7 @@ interface State {
   simLoad: number
   simTimeScale: number
   theme: 'dark' | 'light'
+  lang: Lang
   /** engine running state for the simulation modes (flow/combust/stress) */
   engineRunning: boolean
 
@@ -91,6 +94,7 @@ interface State {
   setSimLoad: (v: number) => void
   setSimTimeScale: (v: number) => void
   toggleTheme: () => void
+  setLang: (l: Lang) => void
   toggleEngine: () => void
   flash: (f: Omit<Feedback, 'ts'>) => void
 
@@ -141,6 +145,7 @@ export const useStore = create<State>((set, get) => ({
   simLoad: 0.8,
   simTimeScale: 0.05,
   theme: (localStorage.getItem('s58-theme') as 'dark' | 'light') || 'dark',
+  lang: (localStorage.getItem('s58-lang') as Lang) || 'en',
   engineRunning: false,
 
   setMode: (m) => {
@@ -210,6 +215,10 @@ export const useStore = create<State>((set, get) => ({
       localStorage.setItem('s58-theme', theme)
       return { theme }
     }),
+  setLang: (l) => {
+    localStorage.setItem('s58-lang', l)
+    set({ lang: l })
+  },
   flash: (f) => {
     set({ feedback: { ...f, ts: Date.now() } })
     setTimeout(() => {
@@ -228,13 +237,14 @@ export const useStore = create<State>((set, get) => ({
 
   attemptRemove: (id) => {
     const s = get()
+    const lang = s.lang
     if (s.mode !== 'disassembly') return
     const expected = REMOVAL_SEQUENCE[s.disasmStep]
     if (!expected) return
     const part = PART_MAP.get(id)
     if (!part) return
     if (part.removalOrder === -1) {
-      get().flash({ kind: 'warn', text: `${part.name} is the structural core — it is not removed in this procedure.` })
+      get().flash({ kind: 'warn', text: t(lang, 'fb.structuralCore', { name: pName(lang, part) }) })
       return
     }
     if (s.removedIds.has(id)) return
@@ -244,20 +254,22 @@ export const useStore = create<State>((set, get) => ({
       const nextStep = s.disasmStep + 1
       const done = nextStep >= REMOVAL_SEQUENCE.length
       set({ removedIds: removed, disasmStep: nextStep, selectedId: id })
-      get().flash({ kind: 'ok', text: `Correct: ${part.name} removed.` })
+      get().flash({ kind: 'ok', text: t(lang, 'fb.removedCorrect', { name: pName(lang, part) }) })
       if (done) {
         const progress = { ...s.progress, disassemblyCompleted: true, disassemblyMistakes: s.disasmMistakes }
         persist(progress)
         set({ progress })
-        get().flash({ kind: 'ok', text: 'Teardown complete! Engine fully disassembled to the bare block.' })
+        get().flash({ kind: 'ok', text: t(lang, 'fb.teardownComplete') })
       }
     } else {
       const blockers = part.dependencies.filter((d) => !s.removedIds.has(d))
       const reason = blockers.length
-        ? `Remove ${blockers.map((b) => PART_MAP.get(b)?.name).join(', ')} first.`
-        : `Out of sequence — next step is ${expected.name}.`
+        ? t(lang, 'fb.removeFirst', {
+            names: blockers.map((b) => pName(lang, PART_MAP.get(b)!)).join('、'),
+          })
+        : t(lang, 'fb.outOfSequence', { name: pName(lang, expected) })
       set({ disasmMistakes: s.disasmMistakes + 1 })
-      get().flash({ kind: 'warn', text: `Cannot remove ${part.name} yet. ${reason}` })
+      get().flash({ kind: 'warn', text: t(lang, 'fb.cannotRemove', { name: pName(lang, part), reason }) })
     }
   },
 
@@ -278,6 +290,7 @@ export const useStore = create<State>((set, get) => ({
 
   attemptPlace: (id) => {
     const s = get()
+    const lang = s.lang
     const expected = REMOVAL_SEQUENCE[s.reasmStep]
     const part = PART_MAP.get(id)
     if (!expected || !part) return
@@ -287,18 +300,18 @@ export const useStore = create<State>((set, get) => ({
       const nextStep = s.reasmStep - 1
       const done = nextStep < 0
       set({ removedIds: removed, reasmStep: nextStep, carryingId: null })
-      get().flash({ kind: 'ok', text: `${part.name} installed correctly.` })
+      get().flash({ kind: 'ok', text: t(lang, 'fb.installedCorrect', { name: pName(lang, part) }) })
       if (done) {
         const progress = { ...s.progress, reassemblyCompleted: true, reassemblyMistakes: s.reasmMistakes }
         persist(progress)
         set({ progress })
-        get().flash({ kind: 'ok', text: 'Reassembly complete — the engine is back together!' })
+        get().flash({ kind: 'ok', text: t(lang, 'fb.reassemblyComplete') })
       }
     } else {
       set({ reasmMistakes: s.reasmMistakes + 1, carryingId: null })
       get().flash({
         kind: 'warn',
-        text: `${part.name} cannot go in yet — install ${expected.name} first (assembly is the reverse of teardown).`,
+        text: t(lang, 'fb.cannotInstall', { name: pName(lang, part), expected: pName(lang, expected) }),
       })
     }
   },
@@ -308,30 +321,44 @@ export const useStore = create<State>((set, get) => ({
 
   answerIdentify: (clickedId) => {
     const s = get()
+    const lang = s.lang
     if (s.mode !== 'quiz' || s.quizAnswered) return
     const q = QUIZ_QUESTIONS[s.quizIndex]
     if (!q || q.kind !== 'identify') return
     if (clickedId === q.targetPartId) {
       set({ quizScore: s.quizScore + 1, quizAnswered: true })
-      get().flash({ kind: 'ok', text: 'Correct!' })
+      get().flash({ kind: 'ok', text: t(lang, 'fb.correct') })
     } else {
       const target = PART_MAP.get(q.targetPartId!)
+      const clicked = PART_MAP.get(clickedId)
       set({ quizMistakes: [...s.quizMistakes, q.id], quizAnswered: true, selectedId: q.targetPartId! })
-      get().flash({ kind: 'warn', text: `Not quite — that was ${PART_MAP.get(clickedId)?.name ?? 'another part'}. The answer (${target?.name}) is now highlighted.` })
+      get().flash({
+        kind: 'warn',
+        text: t(lang, 'fb.identifyWrong', {
+          clicked: clicked ? pName(lang, clicked) : t(lang, 'fb.anotherPart'),
+          answer: target ? pName(lang, target) : '',
+        }),
+      })
     }
   },
 
   answerChoice: (index) => {
     const s = get()
+    const lang = s.lang
     if (s.quizAnswered) return
     const q = QUIZ_QUESTIONS[s.quizIndex]
     if (!q || q.kind !== 'choice') return
     if (index === q.correctIndex) {
       set({ quizScore: s.quizScore + 1, quizAnswered: true })
-      get().flash({ kind: 'ok', text: 'Correct!' })
+      get().flash({ kind: 'ok', text: t(lang, 'fb.correct') })
     } else {
       set({ quizMistakes: [...s.quizMistakes, q.id], quizAnswered: true })
-      get().flash({ kind: 'warn', text: `Incorrect — the right answer was: ${q.options![q.correctIndex!]}` })
+      get().flash({
+        kind: 'warn',
+        text: t(lang, 'fb.choiceWrong', {
+          answer: quizOptions(lang, q)[q.correctIndex!],
+        }),
+      })
     }
   },
 

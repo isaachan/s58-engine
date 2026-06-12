@@ -2,74 +2,79 @@ import React, { useState } from 'react'
 import { useStore } from '../store'
 import { PART_MAP } from '../data/parts'
 import { SYSTEMS } from '../data/systems'
+import { useI18n } from '../i18n'
 
 export const InfoPanel: React.FC = () => {
   const selectedId = useStore((s) => s.selectedId)
   const mode = useStore((s) => s.mode)
+  const hiddenHas = useStore((s) => (selectedId ? s.hiddenIds.has(selectedId) : false))
   const [expanded, setExpanded] = useState(false)
+  const { t, pName, pField, sysName } = useI18n()
   const part = selectedId ? PART_MAP.get(selectedId) : null
 
   if (!part) {
     return (
       <aside className="info-panel dim">
-        <h2>Learning Panel</h2>
-        <p className="muted">
-          Click a part to inspect it. Double-click to focus the camera. Drag a selected part to pull
-          it away from the assembly.
-        </p>
+        <h2>{t('info.learningPanel')}</h2>
+        <p className="muted">{t('info.emptyHint')}</p>
         <ul className="hint-list">
-          <li>Left-drag — rotate</li>
-          <li>Right-drag — pan</li>
-          <li>Scroll — zoom</li>
+          <li>{t('info.hint.rotate')}</li>
+          <li>{t('info.hint.pan')}</li>
+          <li>{t('info.hint.zoom')}</li>
         </ul>
       </aside>
     )
   }
 
   const sys = SYSTEMS[part.system]
+  const failure = pField(part, 'failurePoints')
+  const simplified = pField(part, 'simplified')
   return (
     <aside className="info-panel">
       <div className="sys-chip" style={{ background: sys.color }}>
-        {sys.name}
+        {sysName(sys.id, sys.name)}
       </div>
-      <h2>{part.name}</h2>
+      <h2>{pName(part)}</h2>
       <div className="info-row">
-        <span className="info-key">Function</span>
-        <p>{part.function}</p>
-      </div>
-      <div className="info-row">
-        <span className="info-key">Location</span>
-        <p>{part.location}</p>
+        <span className="info-key">{t('info.function')}</span>
+        <p>{pField(part, 'function')}</p>
       </div>
       <div className="info-row">
-        <span className="info-key">Difficulty</span>
-        <p>{'●'.repeat(part.difficulty)}{'○'.repeat(3 - part.difficulty)} {['Basic', 'Intermediate', 'Advanced'][part.difficulty - 1]}</p>
+        <span className="info-key">{t('info.location')}</span>
+        <p>{pField(part, 'location')}</p>
+      </div>
+      <div className="info-row">
+        <span className="info-key">{t('info.difficulty')}</span>
+        <p>
+          {'●'.repeat(part.difficulty)}
+          {'○'.repeat(3 - part.difficulty)} {t(`info.diff.${part.difficulty}`)}
+        </p>
       </div>
       <button className="link-btn" onClick={() => setExpanded(!expanded)}>
-        {expanded ? '▾ Hide service details' : '▸ Service & inspection details'}
+        {expanded ? t('info.hideDetails') : t('info.showDetails')}
       </button>
       {expanded && (
         <>
           <div className="info-row">
-            <span className="info-key">Inspection</span>
-            <p>{part.inspectionNotes}</p>
+            <span className="info-key">{t('info.inspection')}</span>
+            <p>{pField(part, 'inspectionNotes')}</p>
           </div>
-          {part.failurePoints && (
+          {failure && (
             <div className="info-row">
-              <span className="info-key">Common wear</span>
-              <p>{part.failurePoints}</p>
+              <span className="info-key">{t('info.commonWear')}</span>
+              <p>{failure}</p>
             </div>
           )}
-          {part.simplified && (
+          {simplified && (
             <div className="info-row">
-              <span className="info-key">Model note</span>
-              <p className="muted">{part.simplified}</p>
+              <span className="info-key">{t('info.modelNote')}</span>
+              <p className="muted">{simplified}</p>
             </div>
           )}
         </>
       )}
       <div className="info-row">
-        <span className="info-key">Related parts</span>
+        <span className="info-key">{t('info.relatedParts')}</span>
         <div className="related">
           {part.relatedPartIds.map((id) => {
             const rp = PART_MAP.get(id)
@@ -83,7 +88,7 @@ export const InfoPanel: React.FC = () => {
                   useStore.getState().focusPart(id)
                 }}
               >
-                {rp.name}
+                {pName(rp)}
               </button>
             )
           })}
@@ -91,9 +96,9 @@ export const InfoPanel: React.FC = () => {
       </div>
       {mode === 'explore' && (
         <div className="panel-actions">
-          <button onClick={() => useStore.getState().resetPart(part.id)}>Reset position</button>
+          <button onClick={() => useStore.getState().resetPart(part.id)}>{t('info.resetPosition')}</button>
           <button onClick={() => useStore.getState().toggleHidden(part.id)}>
-            {useStore.getState().hiddenIds.has(part.id) ? 'Show' : 'Hide'} part
+            {hiddenHas ? t('info.showPart') : t('info.hidePart')}
           </button>
         </div>
       )}

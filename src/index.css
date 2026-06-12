@@ -66,7 +66,15 @@ body {
 }
 .mode-tabs button:hover { background: var(--panel-2); color: var(--text); }
 .mode-tabs button.active { background: var(--panel-2); border-color: var(--accent); color: var(--text); }
-.mode-tabs .theme-toggle { margin-left: 10px; border-color: var(--border); }
+.mode-tabs .theme-toggle { margin-left: 8px; border-color: var(--border); }
+
+.lang-switch { display: flex; margin-left: 10px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.lang-switch button {
+  background: transparent; border: none; color: var(--muted);
+  padding: 7px 10px; cursor: pointer; font-size: 12.5px;
+}
+.lang-switch button:hover { background: var(--panel-2); color: var(--text); }
+.lang-switch button.active { background: var(--accent); color: #fff; }
 
 /* ---------- side panel (left) ---------- */
 .side-panel {

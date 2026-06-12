@@ -36,9 +36,13 @@ const EngineAudio: React.FC = () => {
 
 const ThemeApplier: React.FC = () => {
   const theme = useStore((s) => s.theme)
+  const lang = useStore((s) => s.lang)
   useEffect(() => {
     document.documentElement.dataset.theme = theme
   }, [theme])
+  useEffect(() => {
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en'
+  }, [lang])
   return null
 }
 

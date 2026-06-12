@@ -29,11 +29,17 @@ Targets desktop Chrome/Edge with mouse + keyboard.
 Progress persists in `localStorage` and can be exported as CSV from the Explore panel
 (instructor report: parts inspected, teardown/reassembly completion and mistakes, quiz history).
 
+The top bar has a **light/dark theme switch** and a **language switch** (English / 简体中文);
+both persist across sessions. The Chinese translation covers all interface chrome, part names
+and service metadata, quiz content, 3D labels, and in-app feedback. See the localization
+section of [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) for how to add another language.
+
 ## Controls
 
 - **Left-drag** rotate · **Right-drag** pan · **Scroll** zoom
 - **Click** select · **Double-click** focus camera · **Drag selected part** move it
 - Bottom toolbar: explode toggle, labels, reset view, reset all parts
+- Top bar: mode tabs, language switch (EN / 中文), light/dark theme toggle
 
 ## Architecture
 
@@ -41,6 +47,9 @@ Progress persists in `localStorage` and can be exported as CSV from the Explore 
   inspection notes, wear points, dependencies, and removal order. Training logic is data-driven
   from this file.
 - `src/data/quiz.ts` — assessment items.
+- `src/i18n/` — localization: UI string dictionary (`strings.ts`), Chinese content overlay for
+  part/system/quiz data (`content.ts`), and the `useI18n()` hook (`index.ts`). English is the
+  source of truth in `data/`; Chinese overlays by id with English fallback.
 - `src/engine/geometry.tsx` — procedural part geometry builders (primitive composition).
 - `src/engine/PartMesh.tsx` — per-part rendering: highlight states, exploded/removed animation,
   drag with camera-plane raycasting, snap-to-place.

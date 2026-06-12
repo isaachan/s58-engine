@@ -8,6 +8,7 @@ import { REMOVAL_SEQUENCE } from '../data/parts'
 import { PIN_ANGLES, getCycle, simClock } from '../sim/engineCycle'
 import { BUILDERS } from './geometry'
 import { useStore } from '../store'
+import { pName } from '../i18n/content'
 
 const tmpVec = new THREE.Vector3()
 const planeNormal = new THREE.Vector3()
@@ -47,6 +48,7 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
   const carrying = useStore((s) => s.carryingId === def.id)
   const offset = useStore((s) => s.offsets[def.id])
   const showLabels = useStore((s) => s.showLabels)
+  const lang = useStore((s) => s.lang)
   const nextHighlight = useStore(
     (s) => s.mode === 'disassembly' && REMOVAL_SEQUENCE[s.disasmStep]?.id === def.id,
   )
@@ -243,7 +245,7 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
       <Builder material={material} />
       {labelVisible && (
         <Html center distanceFactor={9} position={[0, 0.45, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="part-label">{def.name}</div>
+          <div className="part-label">{pName(lang, def)}</div>
         </Html>
       )}
     </group>

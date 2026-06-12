@@ -6,16 +6,18 @@ import { QUIZ_QUESTIONS } from '../data/quiz'
 import { CIRCUITS, computeFlow } from '../sim/flow'
 import { getCycle } from '../sim/engineCycle'
 import { useEffect, useRef } from 'react'
+import { useI18n } from '../i18n'
 
 const ExplodedPanel: React.FC = () => {
   const isolated = useStore((s) => s.isolatedSystem)
+  const { t, sysName } = useI18n()
   return (
     <div className="side-content">
-      <h3>Systems</h3>
-      <p className="muted small">Isolate one system to study it. Others fade out.</p>
+      <h3>{t('exploded.systems')}</h3>
+      <p className="muted small">{t('exploded.isolateHint')}</p>
       <div className="sys-list">
         <button className={!isolated ? 'active' : ''} onClick={() => useStore.getState().isolate(null)}>
-          All systems
+          {t('exploded.allSystems')}
         </button>
         {SYSTEM_ORDER.map((id) => (
           <button
@@ -24,7 +26,7 @@ const ExplodedPanel: React.FC = () => {
             onClick={() => useStore.getState().isolate(isolated === id ? null : id)}
           >
             <span className="dot" style={{ background: SYSTEMS[id].color }} />
-            {SYSTEMS[id].name}
+            {sysName(id, SYSTEMS[id].name)}
           </button>
         ))}
       </div>
@@ -35,44 +37,43 @@ const ExplodedPanel: React.FC = () => {
 const DisassemblyPanel: React.FC = () => {
   const step = useStore((s) => s.disasmStep)
   const mistakes = useStore((s) => s.disasmMistakes)
+  const { t, pName, pField } = useI18n()
   const total = REMOVAL_SEQUENCE.length
   const done = step >= total
   const current = REMOVAL_SEQUENCE[step]
 
   return (
     <div className="side-content">
-      <h3>Guided Teardown</h3>
+      <h3>{t('dis.title')}</h3>
       <div className="progress-bar">
         <div className="progress-fill" style={{ width: `${(step / total) * 100}%` }} />
       </div>
-      <p className="small muted">
-        Step {Math.min(step + 1, total)} of {total} · Mistakes: {mistakes}
-      </p>
+      <p className="small muted">{t('dis.stepOf', { n: Math.min(step + 1, total), total, m: mistakes })}</p>
       {done ? (
         <div className="step-card ok">
-          <strong>Teardown complete.</strong>
-          <p className="small">The engine is stripped to the bare block. Switch to Reassembly to rebuild it.</p>
-          <button onClick={() => useStore.getState().setMode('reassembly')}>Start reassembly →</button>
+          <strong>{t('dis.complete')}</strong>
+          <p className="small">{t('dis.completeBody')}</p>
+          <button onClick={() => useStore.getState().setMode('reassembly')}>{t('dis.startReassembly')}</button>
         </div>
       ) : (
         <div className="step-card">
-          <span className="step-label">Remove next (highlighted green):</span>
-          <strong>{current.name}</strong>
-          <p className="small">{current.inspectionNotes}</p>
+          <span className="step-label">{t('dis.removeNext')}</span>
+          <strong>{pName(current)}</strong>
+          <p className="small">{pField(current, 'inspectionNotes')}</p>
         </div>
       )}
       <details className="seq-details">
-        <summary>Full sequence</summary>
+        <summary>{t('dis.fullSequence')}</summary>
         <ol className="seq-list">
           {REMOVAL_SEQUENCE.map((p, i) => (
             <li key={p.id} className={i < step ? 'done' : i === step ? 'current' : ''}>
-              {p.name}
+              {pName(p)}
             </li>
           ))}
         </ol>
       </details>
       <button className="ghost" onClick={() => useStore.getState().setMode('disassembly')}>
-        Restart teardown
+        {t('dis.restart')}
       </button>
     </div>
   )
@@ -83,36 +84,35 @@ const ReassemblyPanel: React.FC = () => {
   const reasmStep = useStore((s) => s.reasmStep)
   const mistakes = useStore((s) => s.reasmMistakes)
   const carrying = useStore((s) => s.carryingId)
+  const { t, pName } = useI18n()
   const total = REMOVAL_SEQUENCE.length
   const placed = total - removedIds.size
   const done = reasmStep < 0
 
-  // tray in reverse-removal (= correct install) order
   const tray = [...REMOVAL_SEQUENCE].reverse().filter((p) => removedIds.has(p.id))
 
   return (
     <div className="side-content">
-      <h3>Reassembly Practice</h3>
+      <h3>{t('reasm.title')}</h3>
       <div className="progress-bar">
         <div className="progress-fill" style={{ width: `${(placed / total) * 100}%` }} />
       </div>
-      <p className="small muted">
-        Installed {placed} of {total} · Mistakes: {mistakes}
-      </p>
+      <p className="small muted">{t('reasm.installedOf', { n: placed, total, m: mistakes })}</p>
       {done ? (
         <div className="step-card ok">
-          <strong>Engine assembled!</strong>
-          <p className="small">All parts are back in position. Your mistakes are logged for the instructor report.</p>
+          <strong>{t('reasm.complete')}</strong>
+          <p className="small">{t('reasm.completeBody')}</p>
         </div>
       ) : (
         <>
           <p className="small">
-            Pick a part from the tray, then <strong>drag it onto its position</strong> on the engine. It
-            snaps when close. Assembly order is the reverse of teardown.
+            {t('reasm.dragPre')}
+            <strong>{t('reasm.dragBold')}</strong>
+            {t('reasm.dragPost')}
           </p>
           {carrying && (
             <div className="step-card">
-              Carrying: <strong>{PART_MAP.get(carrying)?.name}</strong>
+              {t('reasm.carrying')} <strong>{pName(PART_MAP.get(carrying)!)}</strong>
             </div>
           )}
           <div className="tray">
@@ -122,14 +122,14 @@ const ReassemblyPanel: React.FC = () => {
                 className={`tray-item ${carrying === p.id ? 'active' : ''}`}
                 onClick={() => useStore.getState().pickUpRemoved(p.id)}
               >
-                {p.name}
+                {pName(p)}
               </button>
             ))}
           </div>
         </>
       )}
       <button className="ghost" onClick={() => useStore.getState().setMode('reassembly')}>
-        Restart reassembly
+        {t('reasm.restart')}
       </button>
     </div>
   )
@@ -140,6 +140,7 @@ const QuizPanel: React.FC = () => {
   const score = useStore((s) => s.quizScore)
   const answered = useStore((s) => s.quizAnswered)
   const progress = useStore((s) => s.progress)
+  const { t, quizPrompt, quizOptions } = useI18n()
   const finished = idx >= QUIZ_QUESTIONS.length
   const q = QUIZ_QUESTIONS[idx]
 
@@ -147,39 +148,38 @@ const QuizPanel: React.FC = () => {
     const last = progress.quizResults[progress.quizResults.length - 1]
     return (
       <div className="side-content">
-        <h3>Assessment Result</h3>
+        <h3>{t('quiz.result')}</h3>
         <div className="score-big">
           {last?.score}/{last?.total}
         </div>
-        <p className="small muted">Time: {last?.timeSec}s · Saved to your training record.</p>
+        <p className="small muted">{t('quiz.time', { s: last?.timeSec ?? 0 })}</p>
         {last && last.mistakes.length > 0 && (
           <>
-            <p className="small">Review these topics:</p>
+            <p className="small">{t('quiz.review')}</p>
             <ul className="seq-list">
-              {last.mistakes.map((id) => (
-                <li key={id}>{QUIZ_QUESTIONS.find((x) => x.id === id)?.prompt}</li>
-              ))}
+              {last.mistakes.map((id) => {
+                const mq = QUIZ_QUESTIONS.find((x) => x.id === id)
+                return <li key={id}>{mq ? quizPrompt(mq) : id}</li>
+              })}
             </ul>
           </>
         )}
-        <button onClick={() => useStore.getState().setMode('quiz')}>Retake assessment</button>
+        <button onClick={() => useStore.getState().setMode('quiz')}>{t('quiz.retake')}</button>
       </div>
     )
   }
 
   return (
     <div className="side-content">
-      <h3>Assessment</h3>
-      <p className="small muted">
-        Question {idx + 1} of {QUIZ_QUESTIONS.length} · Score: {score}
-      </p>
+      <h3>{t('quiz.title')}</h3>
+      <p className="small muted">{t('quiz.questionOf', { n: idx + 1, total: QUIZ_QUESTIONS.length, score })}</p>
       <div className="step-card">
-        <strong>{q.prompt}</strong>
-        {q.kind === 'identify' && <p className="small muted">Click the part in the 3D view.</p>}
+        <strong>{quizPrompt(q)}</strong>
+        {q.kind === 'identify' && <p className="small muted">{t('quiz.clickPart')}</p>}
       </div>
       {q.kind === 'choice' && (
         <div className="choices">
-          {q.options!.map((opt, i) => (
+          {quizOptions(q).map((opt, i) => (
             <button key={i} disabled={answered} onClick={() => useStore.getState().answerChoice(i)}>
               {opt}
             </button>
@@ -188,7 +188,7 @@ const QuizPanel: React.FC = () => {
       )}
       {answered && (
         <button className="primary" onClick={() => useStore.getState().nextQuestion()}>
-          {idx + 1 === QUIZ_QUESTIONS.length ? 'Finish' : 'Next question →'}
+          {idx + 1 === QUIZ_QUESTIONS.length ? t('quiz.finish') : t('quiz.next')}
         </button>
       )}
     </div>
@@ -197,34 +197,34 @@ const QuizPanel: React.FC = () => {
 
 const ExplorePanel: React.FC = () => {
   const progress = useStore((s) => s.progress)
+  const { t } = useI18n()
   const totalParts = PART_MAP.size
   return (
     <div className="side-content">
-      <h3>Explore Mode</h3>
-      <p className="small muted">
-        Free inspection of the BMW S58 — the 3.0 L twin-turbo inline-six used in the M3, M4, X3 M
-        and X4 M.
-      </p>
+      <h3>{t('explore.title')}</h3>
+      <p className="small muted">{t('explore.intro')}</p>
       <div className="stat-grid">
         <div className="stat">
-          <span className="stat-num">{progress.partsInspected.length}/{totalParts}</span>
-          <span className="stat-label">parts inspected</span>
+          <span className="stat-num">
+            {progress.partsInspected.length}/{totalParts}
+          </span>
+          <span className="stat-label">{t('explore.partsInspected')}</span>
         </div>
         <div className="stat">
           <span className="stat-num">{progress.quizResults.length}</span>
-          <span className="stat-label">assessments taken</span>
+          <span className="stat-label">{t('explore.assessmentsTaken')}</span>
         </div>
         <div className="stat">
           <span className="stat-num">{progress.disassemblyCompleted ? '✓' : '—'}</span>
-          <span className="stat-label">teardown done</span>
+          <span className="stat-label">{t('explore.teardownDone')}</span>
         </div>
         <div className="stat">
           <span className="stat-num">{progress.reassemblyCompleted ? '✓' : '—'}</span>
-          <span className="stat-label">reassembly done</span>
+          <span className="stat-label">{t('explore.reassemblyDone')}</span>
         </div>
       </div>
       <button className="ghost" onClick={() => useStore.getState().exportCsv()}>
-        Export progress report (CSV)
+        {t('explore.exportCsv')}
       </button>
     </div>
   )
@@ -234,18 +234,16 @@ const FlowPanel: React.FC = () => {
   const rpm = useStore((s) => s.flowRpm)
   const throttle = useStore((s) => s.flowThrottle)
   const circuits = useStore((s) => s.flowCircuits)
+  const { t, circuitName } = useI18n()
   const f = computeFlow({ rpm, throttle })
 
   return (
     <div className="side-content">
-      <h3>Fluid Dynamics</h3>
-      <p className="small muted">
-        Lumped-parameter (1D) flow model — quasi-steady gas and thermal balances, not CFD.
-        Particle speed tracks computed flow rates.
-      </p>
+      <h3>{t('flow.title')}</h3>
+      <p className="small muted">{t('flow.intro')}</p>
       <EngineButton />
       <label className="slider-row">
-        <span>Engine speed</span>
+        <span>{t('common.engineSpeed')}</span>
         <input
           type="range"
           min={800}
@@ -257,7 +255,7 @@ const FlowPanel: React.FC = () => {
         <strong>{rpm} rpm</strong>
       </label>
       <label className="slider-row">
-        <span>Throttle</span>
+        <span>{t('flow.throttle')}</span>
         <input
           type="range"
           min={0}
@@ -277,31 +275,36 @@ const FlowPanel: React.FC = () => {
             onClick={() => useStore.getState().toggleCircuit(c.id)}
           >
             <span className="dot" style={{ background: c.color }} />
-            {c.name}
+            {circuitName(c.id, c.name)}
           </button>
         ))}
       </div>
 
       <div className="stat-grid">
-        <div className="stat"><span className="stat-num">{f.mafGs.toFixed(0)} g/s</span><span className="stat-label">mass air flow</span></div>
-        <div className="stat"><span className="stat-num">{f.boostBar.toFixed(2)} bar</span><span className="stat-label">boost (gauge)</span></div>
-        <div className="stat"><span className="stat-num">{f.turboKrpm.toFixed(0)} krpm</span><span className="stat-label">turbo speed</span></div>
-        <div className="stat"><span className="stat-num">{f.chargeTempC.toFixed(0)} °C</span><span className="stat-label">charge temp</span></div>
-        <div className="stat"><span className="stat-num">{f.exhaustTempC.toFixed(0)} °C</span><span className="stat-label">exhaust temp</span></div>
-        <div className="stat"><span className="stat-num">{f.exhaustGs.toFixed(0)} g/s</span><span className="stat-label">exhaust flow</span></div>
-        <div className="stat"><span className="stat-num">{f.coolantLpm.toFixed(0)} L/min</span><span className="stat-label">coolant flow</span></div>
-        <div className="stat"><span className="stat-num">+{f.coolantDeltaC.toFixed(1)} °C</span><span className="stat-label">coolant ΔT</span></div>
-        <div className="stat"><span className="stat-num">{f.oilBar.toFixed(1)} bar</span><span className="stat-label">oil pressure</span></div>
-        <div className="stat"><span className="stat-num">{f.oilLpm.toFixed(0)} L/min</span><span className="stat-label">oil flow</span></div>
-        <div className="stat"><span className="stat-num">{f.powerKw.toFixed(0)} kW</span><span className="stat-label">est. power</span></div>
-        <div className="stat"><span className="stat-num">{f.fuelGs.toFixed(1)} g/s</span><span className="stat-label">fuel flow</span></div>
+        <Stat num={`${f.mafGs.toFixed(0)} g/s`} label={t('stat.maf')} />
+        <Stat num={`${f.boostBar.toFixed(2)} bar`} label={t('stat.boost')} />
+        <Stat num={`${f.turboKrpm.toFixed(0)} krpm`} label={t('stat.turboSpeed')} />
+        <Stat num={`${f.chargeTempC.toFixed(0)} °C`} label={t('stat.chargeTemp')} />
+        <Stat num={`${f.exhaustTempC.toFixed(0)} °C`} label={t('stat.exhaustTemp')} />
+        <Stat num={`${f.exhaustGs.toFixed(0)} g/s`} label={t('stat.exhaustFlow')} />
+        <Stat num={`${f.coolantLpm.toFixed(0)} L/min`} label={t('stat.coolantFlow')} />
+        <Stat num={`+${f.coolantDeltaC.toFixed(1)} °C`} label={t('stat.coolantDelta')} />
+        <Stat num={`${f.oilBar.toFixed(1)} bar`} label={t('stat.oilPressure')} />
+        <Stat num={`${f.oilLpm.toFixed(0)} L/min`} label={t('stat.oilFlow')} />
+        <Stat num={`${f.powerKw.toFixed(0)} kW`} label={t('stat.estPower')} />
+        <Stat num={`${f.fuelGs.toFixed(1)} g/s`} label={t('stat.fuelFlow')} />
       </div>
-      <p className="small muted">
-        Engine parts are ghosted so circuits are visible. Hover or select parts to identify them.
-      </p>
+      <p className="small muted">{t('flow.ghostHint')}</p>
     </div>
   )
 }
+
+const Stat: React.FC<{ num: string; label: string }> = ({ num, label }) => (
+  <div className="stat">
+    <span className="stat-num">{num}</span>
+    <span className="stat-label">{label}</span>
+  </div>
+)
 
 const SimCanvas: React.FC<{
   draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void
@@ -327,12 +330,13 @@ const SimCanvas: React.FC<{
 
 const EngineButton: React.FC = () => {
   const running = useStore((s) => s.engineRunning)
+  const { t } = useI18n()
   return (
     <button
       className={`engine-btn ${running ? 'running' : ''}`}
       onClick={() => useStore.getState().toggleEngine()}
     >
-      {running ? '■ Stop engine' : '▶ Start engine'}
+      {running ? t('sim.stop') : t('sim.start')}
     </button>
   )
 }
@@ -341,23 +345,24 @@ const SimControls: React.FC = () => {
   const rpm = useStore((s) => s.simRpm)
   const load = useStore((s) => s.simLoad)
   const ts = useStore((s) => s.simTimeScale)
+  const { t } = useI18n()
   return (
     <>
       <EngineButton />
       <label className="slider-row">
-        <span>Engine speed</span>
+        <span>{t('common.engineSpeed')}</span>
         <input type="range" min={800} max={7200} step={50} value={rpm}
           onChange={(e) => useStore.getState().setSimRpm(Number(e.target.value))} />
         <strong>{rpm} rpm</strong>
       </label>
       <label className="slider-row">
-        <span>Load</span>
+        <span>{t('sim.load')}</span>
         <input type="range" min={0.05} max={1} step={0.01} value={load}
           onChange={(e) => useStore.getState().setSimLoad(Number(e.target.value))} />
         <strong>{Math.round(load * 100)}%</strong>
       </label>
       <label className="slider-row">
-        <span>Slow motion</span>
+        <span>{t('sim.slowMotion')}</span>
         <input type="range" min={0.005} max={0.5} step={0.005} value={ts}
           onChange={(e) => useStore.getState().setSimTimeScale(Number(e.target.value))} />
         <strong>×{ts.toFixed(2)}</strong>
@@ -369,39 +374,37 @@ const SimControls: React.FC = () => {
 const CombustionPanel: React.FC = () => {
   const rpm = useStore((s) => s.simRpm)
   const load = useStore((s) => s.simLoad)
+  const { t } = useI18n()
   const c = getCycle(rpm, load)
+  const tdcLabel = t('chart.tdc')
+  const bdcLabel = t('chart.bdc')
 
   return (
     <div className="side-content">
-      <h3>Combustion Cycle</h3>
-      <p className="small muted">
-        Per-degree first-law model: polytropic compression/expansion with Wiebe heat release.
-        Firing order 1-5-3-6-2-4. Watch the rotating assembly and the flash in each firing
-        cylinder.
-      </p>
+      <h3>{t('combust.title')}</h3>
+      <p className="small muted">{t('combust.intro')}</p>
       <SimControls />
       <div className="stat-grid">
-        <div className="stat"><span className="stat-num">{c.peakBar.toFixed(0)} bar</span><span className="stat-label">peak pressure @ {c.peakDeg}° ATDC</span></div>
-        <div className="stat"><span className="stat-num">{c.imepBar.toFixed(1)} bar</span><span className="stat-label">IMEP</span></div>
-        <div className="stat"><span className="stat-num">{c.brakeTorqueNm.toFixed(0)} N·m</span><span className="stat-label">brake torque</span></div>
-        <div className="stat"><span className="stat-num">{c.powerKw.toFixed(0)} kW</span><span className="stat-label">brake power</span></div>
-        <div className="stat"><span className="stat-num">{c.sparkBtdc.toFixed(0)}° BTDC</span><span className="stat-label">spark advance</span></div>
-        <div className="stat"><span className="stat-num">{c.fuelMgCyl.toFixed(0)} mg</span><span className="stat-label">fuel / cyl / cycle</span></div>
+        <Stat num={`${c.peakBar.toFixed(0)} bar`} label={t('combust.peakAt', { deg: c.peakDeg })} />
+        <Stat num={`${c.imepBar.toFixed(1)} bar`} label={t('stat.imep')} />
+        <Stat num={`${c.brakeTorqueNm.toFixed(0)} N·m`} label={t('stat.brakeTorque')} />
+        <Stat num={`${c.powerKw.toFixed(0)} kW`} label={t('stat.brakePower')} />
+        <Stat num={t('combust.btdc', { deg: c.sparkBtdc.toFixed(0) })} label={t('stat.sparkAdvance')} />
+        <Stat num={`${c.fuelMgCyl.toFixed(0)} mg`} label={t('stat.fuelPerCyl')} />
       </div>
       <SimCanvas
-        label={`Cylinder pressure vs crank angle (0–${Math.ceil(c.peakBar / 10) * 10} bar)`}
-        deps={[rpm, load]}
+        label={t('combust.pressureChart', { max: Math.ceil(c.peakBar / 10) * 10 })}
+        deps={[rpm, load, tdcLabel]}
         draw={(ctx, w, h) => {
           const pMax = c.peakBar * 1.08
           ctx.strokeStyle = '#39434f'
           ctx.beginPath(); ctx.moveTo(0, h - 14); ctx.lineTo(w, h - 14); ctx.stroke()
-          // TDC marker at θ=0
           const xTdc = (360 / 720) * w
           ctx.strokeStyle = '#4a5560'; ctx.setLineDash([3, 3])
           ctx.beginPath(); ctx.moveTo(xTdc, 0); ctx.lineTo(xTdc, h - 14); ctx.stroke()
           ctx.setLineDash([])
           ctx.fillStyle = '#8d99a6'; ctx.font = '9px sans-serif'
-          ctx.fillText('-360', 2, h - 4); ctx.fillText('TDC', xTdc - 9, h - 4); ctx.fillText('360', w - 20, h - 4)
+          ctx.fillText('-360', 2, h - 4); ctx.fillText(tdcLabel, xTdc - 9, h - 4); ctx.fillText('360', w - 20, h - 4)
           ctx.strokeStyle = '#ff7a3c'; ctx.lineWidth = 1.5
           ctx.beginPath()
           for (let i = 0; i <= 720; i++) {
@@ -413,8 +416,8 @@ const CombustionPanel: React.FC = () => {
         }}
       />
       <SimCanvas
-        label="P–V diagram (pressure vs cylinder volume)"
-        deps={[rpm, load]}
+        label={t('combust.pvChart')}
+        deps={[rpm, load, tdcLabel]}
         draw={(ctx, w, h) => {
           const pMax = c.peakBar * 1.08
           const vMin = 45
@@ -430,62 +433,57 @@ const CombustionPanel: React.FC = () => {
           }
           ctx.stroke()
           ctx.fillStyle = '#8d99a6'; ctx.font = '9px sans-serif'
-          ctx.fillText('TDC', 6, h - 5); ctx.fillText('BDC', w - 26, h - 5)
+          ctx.fillText(tdcLabel, 6, h - 5); ctx.fillText(bdcLabel, w - 26, h - 5)
         }}
       />
-      <p className="small muted">
-        Simplifications: quasi-steady gas exchange, fixed polytropic exponents, no knock or
-        cycle-to-cycle variation, reciprocating inertia not included in the pressure trace.
-      </p>
+      <p className="small muted">{t('combust.simplify')}</p>
     </div>
   )
 }
 
 const STRESS_PARTS: [string, string][] = [
-  ['piston-1', 'Pistons & rods'],
-  ['crankshaft', 'Crankshaft'],
-  ['cylinder-head', 'Cylinder head'],
-  ['cylinder-block', 'Cylinder block'],
-  ['turbo-front', 'Turbochargers'],
-  ['exhaust-manifold-front', 'Exhaust manifolds'],
-  ['timing-chain', 'Timing chain'],
-  ['intake-manifold', 'Intake (boost)'],
-  ['hp-fuel-pump', 'Fuel system'],
+  ['piston-1', 'stress.part.pistons'],
+  ['crankshaft', 'stress.part.crankshaft'],
+  ['cylinder-head', 'stress.part.head'],
+  ['cylinder-block', 'stress.part.block'],
+  ['turbo-front', 'stress.part.turbos'],
+  ['exhaust-manifold-front', 'stress.part.exhaust'],
+  ['timing-chain', 'stress.part.timing'],
+  ['intake-manifold', 'stress.part.intake'],
+  ['hp-fuel-pump', 'stress.part.fuel'],
 ]
 
 const StressPanel: React.FC = () => {
   const rpm = useStore((s) => s.simRpm)
   const load = useStore((s) => s.simLoad)
+  const { t } = useI18n()
   const c = getCycle(rpm, load)
+  const meanLabel = t('stress.meanLine')
 
   return (
     <div className="side-content">
-      <h3>Torque &amp; Stress</h3>
-      <p className="small muted">
-        Instantaneous crank torque from slider-crank kinematics over the cycle; parts are
-        colored by load utilization (blue = low, red = near design limit).
-      </p>
+      <h3>{t('stress.title')}</h3>
+      <p className="small muted">{t('stress.intro')}</p>
       <SimControls />
       <div className="stat-grid">
-        <div className="stat"><span className="stat-num">{c.brakeTorqueNm.toFixed(0)} N·m</span><span className="stat-label">mean brake torque</span></div>
-        <div className="stat"><span className="stat-num">{c.powerKw.toFixed(0)} kW</span><span className="stat-label">brake power</span></div>
-        <div className="stat"><span className="stat-num">{c.peakTorqueNm.toFixed(0)} N·m</span><span className="stat-label">peak instantaneous</span></div>
-        <div className="stat"><span className="stat-num">{c.minTorqueNm.toFixed(0)} N·m</span><span className="stat-label">min (reversal)</span></div>
-        <div className="stat"><span className="stat-num">{c.gasForceKn.toFixed(0)} kN</span><span className="stat-label">peak gas force</span></div>
-        <div className="stat"><span className="stat-num">{c.rodForceKn.toFixed(0)} kN</span><span className="stat-label">conrod force</span></div>
-        <div className="stat"><span className="stat-num">{c.inertiaForceKn.toFixed(1)} kN</span><span className="stat-label">recip. inertia @TDC</span></div>
-        <div className="stat"><span className="stat-num">{c.rodBearingMpa.toFixed(0)} MPa</span><span className="stat-label">rod bearing load</span></div>
+        <Stat num={`${c.brakeTorqueNm.toFixed(0)} N·m`} label={t('stat.meanBrakeTorque')} />
+        <Stat num={`${c.powerKw.toFixed(0)} kW`} label={t('stat.brakePower')} />
+        <Stat num={`${c.peakTorqueNm.toFixed(0)} N·m`} label={t('stat.peakInstant')} />
+        <Stat num={`${c.minTorqueNm.toFixed(0)} N·m`} label={t('stat.minReversal')} />
+        <Stat num={`${c.gasForceKn.toFixed(0)} kN`} label={t('stat.peakGasForce')} />
+        <Stat num={`${c.rodForceKn.toFixed(0)} kN`} label={t('stat.conrodForce')} />
+        <Stat num={`${c.inertiaForceKn.toFixed(1)} kN`} label={t('stat.recipInertia')} />
+        <Stat num={`${c.rodBearingMpa.toFixed(0)} MPa`} label={t('stat.rodBearing')} />
       </div>
       <SimCanvas
-        label="Total crank torque vs crank angle (720°)"
-        deps={[rpm, load]}
+        label={t('stress.torqueChart')}
+        deps={[rpm, load, meanLabel]}
         draw={(ctx, w, h) => {
           const tMax = Math.max(c.peakTorqueNm, 1) * 1.1
           const tMin = Math.min(c.minTorqueNm, 0) * 1.1
           const y0 = (h - 12) * (tMax / (tMax - tMin))
           ctx.strokeStyle = '#39434f'
           ctx.beginPath(); ctx.moveTo(0, y0); ctx.lineTo(w, y0); ctx.stroke()
-          // mean torque line
           const yMean = (h - 12) * ((tMax - c.meanIndTorqueNm) / (tMax - tMin))
           ctx.strokeStyle = '#2eb872'; ctx.setLineDash([3, 3])
           ctx.beginPath(); ctx.moveTo(0, yMean); ctx.lineTo(w, yMean); ctx.stroke()
@@ -499,16 +497,16 @@ const StressPanel: React.FC = () => {
           }
           ctx.stroke()
           ctx.fillStyle = '#8d99a6'; ctx.font = '9px sans-serif'
-          ctx.fillText('mean (indicated)', w - 86, yMean - 3)
+          ctx.fillText(meanLabel, w - 86, yMean - 3)
         }}
       />
       <div className="util-list">
-        {STRESS_PARTS.map(([id, name]) => {
+        {STRESS_PARTS.map(([id, key]) => {
           const u = Math.min(c.partUtil[id] ?? 0, 1.2)
           const hue = 220 * (1 - Math.min(u, 1))
           return (
             <div key={id} className="util-row">
-              <span>{name}</span>
+              <span>{t(key)}</span>
               <div className="util-bar">
                 <div
                   className="util-fill"
@@ -520,10 +518,7 @@ const StressPanel: React.FC = () => {
           )
         })}
       </div>
-      <p className="small muted">
-        Utilization = computed load / representative design allowable. Educational magnitudes —
-        not an FEA substitute.
-      </p>
+      <p className="small muted">{t('stress.util')}</p>
     </div>
   )
 }

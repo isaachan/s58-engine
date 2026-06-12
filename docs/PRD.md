@@ -400,6 +400,10 @@ Future support:
 - Toolbars should use recognizable icons with tooltips.
 - The UI shall provide a light/dark theme switch in the top bar; the theme applies to both
   the UI panels and the 3D viewport, and the preference persists across sessions.
+- The UI shall provide a language switch in the top bar. The product is multi-language;
+  English and Simplified Chinese (简体中文) are supported, and the selection persists across
+  sessions. Translation covers all interface chrome, part names and service metadata, quiz
+  content, and in-app feedback messages.
 - Training instructions should be concise and tied to the current task.
 - The UI should support both free exploration and structured training without changing products.
 
@@ -519,6 +523,8 @@ Mitigation:
 - What level of detail is required for internal components in the first release?
 - Should the product support official BMW training curriculum alignment?
 - Should the app run fully offline in a training center?
-- What languages should be supported at launch?
+- What languages should be supported at launch? (English and Simplified Chinese are
+  implemented; the i18n layer supports adding further languages — see the localization
+  section of the implementation spec.)
 - What certification or scoring standard should be used for professional training?
 

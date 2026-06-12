@@ -41,18 +41,25 @@ src/
     geometry.tsx        Procedural geometry builders, keyed by PartDef.build
     FlowParticles.tsx   Particle streams along the sim/flow circuit splines
     SimDriver.tsx       Advances the crank-angle clock; combustion flash FX
+  i18n/                 Localization (see §9a)
+    strings.ts          Lang type, UI-chrome dictionary (en/zh), t() interpolator
+    content.ts          Chinese overlay for part/system/quiz/circuit data + resolvers
+    index.ts            Re-exports + useI18n() hook (binds helpers to the active lang)
   ui/                   Everything rendered as DOM
-    Toolbar.tsx         TopBar (mode tabs), BottomToolbar (view actions), Toast
+    Toolbar.tsx         TopBar (mode tabs, theme + language switch), BottomToolbar, Toast
     SidePanel.tsx       Left panel: one sub-panel per mode (incl. sim panels + canvases)
     InfoPanel.tsx       Right panel: selected-part metadata ("Learning Panel")
 ```
 
 **Dependency direction (enforce when editing):**
 `data/` depends on `types.ts` only. `sim/` is pure TypeScript physics (flow → engineCycle),
-imported by `engine/`, `ui/`, and `geometry.tsx` (crank pin angles). `store.ts` depends on
-`data/`. `engine/` and `ui/` depend on `store.ts` + `data/` + `sim/`. Nothing imports from
-`engine/` or `ui/` except `App.tsx`. Training logic must never live in `engine/` — that
-separation is a PRD requirement (§14).
+imported by `engine/`, `ui/`, and `geometry.tsx` (crank pin angles). `i18n/strings` +
+`i18n/content` are pure (no app imports) and are consumed by `store.ts`, `engine/`, and `ui/`;
+`i18n/index` (the `useI18n` hook) imports the store, but the store imports only the pure i18n
+modules, so there is no cycle. `store.ts` depends on `data/` + `i18n` (pure). `engine/` and
+`ui/` depend on `store.ts` + `data/` + `sim/` + `i18n`. Nothing imports from `engine/` or
+`ui/` except `App.tsx`. Training logic must never live in `engine/` — that separation is a
+PRD requirement (§14).
 
 ### Simulation modes (flow / combust / stress)
 
@@ -280,8 +287,35 @@ no audio dependency.
   `REMOVAL_SEQUENCE`. To support multiple modules (PRD Phase 3), parameterize the store's
   sequence (`disasmStep` indexes into a selected module's part-id list) instead of importing
   the constant directly — the validation logic itself needs no change.
-- **i18n**: all user-visible strings live in `data/*.ts` (content) and `ui/*.tsx` (chrome);
-  there is no extraction layer yet.
+## 9a. Localization (i18n)
+
+The app ships English and Simplified Chinese; the language lives in the store (`lang`,
+persisted under `s58-lang`, switched from the TopBar `LangSwitch`). `App.tsx` mirrors it to
+`document.documentElement.lang`. The layer is in `src/i18n/`:
+
+- `strings.ts` — `Lang` type, `LANGS` list, and the UI-chrome dictionary (`en`/`zh`) with the
+  `t(lang, key, params?)` interpolator (`{name}` placeholders). English is the source of
+  truth; every key is mirrored in `zh`, falling back to English if missing. **No app imports**
+  — safe for the store to use.
+- `content.ts` — translation *overlay* for data that lives in English in `data/*` and
+  `sim/flow.ts`: `PARTS_ZH` (part name + all service-prose fields, keyed by part id; pistons
+  generated), `SYSTEMS_ZH`, `CIRCUITS_ZH`, `QUIZ_ZH`. Resolvers (`pName`, `pField`, `sysName`,
+  `circuitName`, `quizPrompt`, `quizOptions`) take a `Lang` and fall back to the English field.
+- `index.ts` — re-exports the above plus the `useI18n()` hook, which reads `lang` from the
+  store and returns `t` and the content resolvers already bound to the current language.
+
+Components call `useI18n()` and re-render on language change because they subscribe to the
+store. Non-React code (the store's feedback messages, the r3f `PartMesh` 3D label) imports the
+pure functions from `i18n/strings` / `i18n/content` directly with an explicit `lang` argument
+— this also avoids a cycle, since `i18n/index` imports the store but the store never imports
+`i18n/index`.
+
+**Adding a language**: add the id to `LANGS`, add a dictionary in `strings.ts`, and add the
+content maps in `content.ts` (any missing key/field automatically falls back to English).
+**Adding a translated string**: add the key to *both* dictionaries in `strings.ts` and call
+`t('your.key')`; never inline a user-visible literal in a component. Canvas-drawn chart labels
+are passed translated strings via the `SimCanvas` draw closures and listed in the `deps` array
+so they repaint on language change.
 
 ## 10. Verification
 
