@@ -2,11 +2,13 @@ import type { EngineDefinition, EngineId, EngineMeta } from './types'
 import { S58_ENGINE } from './s58'
 import { B48_ENGINE } from './b48'
 import { SKYACTIV_G_ENGINE } from './skyactiv-g'
+import { EA888_ENGINE } from './ea888'
 
 const ENGINES: Record<EngineId, EngineDefinition> = {
   s58: S58_ENGINE,
   b48: B48_ENGINE,
   'skyactiv-g': SKYACTIV_G_ENGINE,
+  ea888: EA888_ENGINE,
 }
 
 export const ENGINE_IDS = Object.keys(ENGINES) as EngineId[]
