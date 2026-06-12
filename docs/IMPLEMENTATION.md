@@ -4,6 +4,11 @@ Maintainer documentation for the S58 Engine Training Simulator. Read this alongs
 [PRD.md](PRD.md) (product requirements) and the root [README.md](../README.md) (user-facing
 overview). This document explains *how the code works* and *how to change it safely*.
 
+> **Planned refactor:** multi-engine support (engine registry, landing screen, BMW B48 as the
+> second engine) is designed in [MULTI_ENGINE.md](MULTI_ENGINE.md). This document describes the
+> current single-engine architecture; sections describing engine-specific data will move behind
+> the `EngineDefinition` abstraction described there.
+
 ---
 
 ## 1. Tech stack

@@ -2,6 +2,7 @@ import React from 'react'
 import { useStore } from '../store'
 import type { Mode } from '../types'
 import { useI18n, LANGS, t as tIn } from '../i18n'
+import type { LocalizedString } from '../engines/types'
 
 /**
  * Renders the label in the active language while invisibly reserving the
@@ -17,6 +18,20 @@ const DualLabel: React.FC<{ k: string }> = ({ k }) => {
       </span>
       <span className={lang === 'zh' ? undefined : 'ghost'} aria-hidden={lang !== 'zh'}>
         {tIn('zh', k)}
+      </span>
+    </span>
+  )
+}
+
+export const DualText: React.FC<{ text: LocalizedString }> = ({ text }) => {
+  const lang = useStore((s) => s.lang)
+  return (
+    <span className="dual-label">
+      <span className={lang === 'en' ? undefined : 'ghost'} aria-hidden={lang !== 'en'}>
+        {text.en}
+      </span>
+      <span className={lang === 'zh' ? undefined : 'ghost'} aria-hidden={lang !== 'zh'}>
+        {text.zh}
       </span>
     </span>
   )
@@ -51,16 +66,18 @@ const LangSwitch: React.FC = () => {
 }
 
 export const TopBar: React.FC = () => {
+  const engine = useStore((s) => s.engine)
   const mode = useStore((s) => s.mode)
   const theme = useStore((s) => s.theme)
   const { t } = useI18n()
+  if (!engine) return null
   return (
     <header className="top-bar">
       <div className="brand">
-        <span className="brand-badge">S58</span>
+        <span className="brand-badge">{engine.meta.badge}</span>
         <div>
-          <div className="brand-title"><DualLabel k="brand.title" /></div>
-          <div className="brand-sub"><DualLabel k="brand.sub" /></div>
+          <div className="brand-title"><DualText text={engine.meta.name} /></div>
+          <div className="brand-sub"><DualText text={engine.meta.subtitle} /></div>
         </div>
       </div>
       <nav className="mode-tabs">
@@ -75,6 +92,13 @@ export const TopBar: React.FC = () => {
           </button>
         ))}
         <LangSwitch />
+        <button
+          className="theme-toggle"
+          onClick={() => useStore.getState().exitToLanding()}
+          title={t('topbar.changeEngine')}
+        >
+          <DualLabel k="topbar.changeEngine" />
+        </button>
         <button
           className="theme-toggle"
           onClick={() => useStore.getState().toggleTheme()}

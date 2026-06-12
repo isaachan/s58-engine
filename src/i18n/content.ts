@@ -1,5 +1,6 @@
 import type { Lang } from './strings'
 import type { PartDef, QuizQuestion, SystemId } from '../types'
+import type { EngineDefinition } from '../engines/types'
 
 /**
  * Content translation overlay. English lives in data/* (source of truth);
@@ -300,15 +301,17 @@ const QUIZ_ZH: Record<string, { prompt: string; options?: string[] }> = {
 
 /* ------------------------------- resolvers ------------------------------- */
 
-export function pField(lang: Lang, part: PartDef, field: PartFieldKey): string | undefined {
+export function pField(lang: Lang, engine: EngineDefinition | null, part: PartDef, field: PartFieldKey): string | undefined {
   if (lang === 'zh') {
+    const engineValue = engine?.zh.parts[part.id]?.[field]
+    if (engineValue !== undefined) return engineValue
     const z = PARTS_ZH[part.id]?.[field]
     if (z !== undefined) return z
   }
   return part[field] as string | undefined
 }
 
-export const pName = (lang: Lang, part: PartDef): string => pField(lang, part, 'name')!
+export const pName = (lang: Lang, engine: EngineDefinition | null, part: PartDef): string => pField(lang, engine, part, 'name')!
 
 export function sysName(lang: Lang, id: SystemId, fallback: string): string {
   return lang === 'zh' ? SYSTEMS_ZH[id] ?? fallback : fallback
@@ -318,11 +321,12 @@ export function circuitName(lang: Lang, id: string, fallback: string): string {
   return lang === 'zh' ? CIRCUITS_ZH[id] ?? fallback : fallback
 }
 
-export function quizPrompt(lang: Lang, q: QuizQuestion): string {
-  return lang === 'zh' ? QUIZ_ZH[q.id]?.prompt ?? q.prompt : q.prompt
+export function quizPrompt(lang: Lang, engine: EngineDefinition | null, q: QuizQuestion): string {
+  return lang === 'zh' ? engine?.zh.quiz[q.id]?.prompt ?? QUIZ_ZH[q.id]?.prompt ?? q.prompt : q.prompt
 }
 
-export function quizOptions(lang: Lang, q: QuizQuestion): string[] {
+export function quizOptions(lang: Lang, engine: EngineDefinition | null, q: QuizQuestion): string[] {
+  if (lang === 'zh' && engine?.zh.quiz[q.id]?.options) return engine.zh.quiz[q.id].options!
   if (lang === 'zh' && QUIZ_ZH[q.id]?.options) return QUIZ_ZH[q.id]!.options!
   return q.options ?? []
 }

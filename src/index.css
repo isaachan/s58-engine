@@ -84,6 +84,41 @@ body {
 .lang-switch button:hover { background: var(--panel-2); color: var(--text); }
 .lang-switch button.active { background: var(--accent); color: #fff; }
 
+/* ---------- landing / engine selector ---------- */
+.landing {
+  min-height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center;
+  padding: 28px;
+}
+.landing-inner { width: min(1120px, 100%); display: flex; flex-direction: column; gap: 18px; }
+.landing-copy { display: flex; flex-direction: column; gap: 4px; }
+.landing-kicker {
+  color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; font-size: 12px; font-weight: 700;
+}
+.landing h1 { font-size: 32px; line-height: 1.1; font-weight: 750; }
+.engine-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.engine-card {
+  text-align: left; color: var(--text); background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px; cursor: pointer; display: flex; flex-direction: column; gap: 10px;
+}
+.engine-card:hover { border-color: var(--accent); background: var(--panel-2); }
+.engine-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.engine-card h2 { font-size: 21px; line-height: 1.2; }
+.last-used {
+  color: var(--ok); border: 1px solid rgba(46, 184, 114, 0.6); border-radius: 999px;
+  padding: 3px 8px; font-size: 11px; font-weight: 700;
+}
+.spec-grid {
+  display: grid; grid-template-columns: 108px 1fr; gap: 6px 12px;
+  font-size: 12.5px; border-top: 1px solid var(--border); padding-top: 10px;
+}
+.spec-grid span { color: var(--muted); }
+.spec-grid strong { font-weight: 600; }
+.landing-progress {
+  display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border);
+  padding-top: 10px; color: var(--muted); font-size: 12.5px;
+}
+.landing-progress strong { color: var(--text); }
+
 /* ---------- side panel (left) ---------- */
 .side-panel {
   width: 280px; background: var(--panel); border-right: 1px solid var(--border);
@@ -267,4 +302,5 @@ body {
   .side-panel { width: 230px; }
   .info-panel { width: 250px; }
   .bar-hint { display: none; }
+  .engine-card-grid { grid-template-columns: 1fr; }
 }

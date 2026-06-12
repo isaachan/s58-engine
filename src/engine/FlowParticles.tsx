@@ -2,7 +2,8 @@ import React, { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useStore } from '../store'
-import { CIRCUITS, CircuitDef, computeFlow, FlowResult } from '../sim/flow'
+import type { CircuitDef } from '../engines/types'
+import { computeFlow, FlowResult } from '../sim/flow'
 
 const tmp = new THREE.Vector3()
 
@@ -97,13 +98,14 @@ export const FlowParticles: React.FC = () => {
   const throttle = useStore((s) => s.flowThrottle)
   const circuits = useStore((s) => s.flowCircuits)
   const running = useStore((s) => s.engineRunning)
+  const engine = useStore((s) => s.engine)!
 
-  const flow = useMemo(() => computeFlow({ rpm, throttle }), [rpm, throttle])
+  const flow = useMemo(() => computeFlow(engine, { rpm, throttle }), [engine, rpm, throttle])
 
   if (mode !== 'flow') return null
   return (
     <group>
-      {CIRCUITS.filter((c) => circuits.has(c.id)).map((c) => (
+      {engine.circuits.filter((c) => circuits.has(c.id)).map((c) => (
         <group key={c.id}>
           <CircuitGuide def={c} />
           <Circuit def={c} speed={running ? (flow[SPEED_KEY[c.id]] as number) : 0} />

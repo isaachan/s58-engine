@@ -2,9 +2,7 @@ import React, { useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useStore } from '../store'
-import { FIRE_DEG, simClock } from '../sim/engineCycle'
-
-const CYL_X = [-1.25, -0.75, -0.25, 0.25, 0.75, 1.25]
+import { simClock } from '../sim/engineCycle'
 
 /**
  * Advances the shared crank-angle clock (slow-motion scaled) and renders the
@@ -14,9 +12,12 @@ const CYL_X = [-1.25, -0.75, -0.25, 0.25, 0.75, 1.25]
 export const SimDriver: React.FC = () => {
   const flashes = useRef<(THREE.Mesh | null)[]>([])
   const light = useRef<THREE.PointLight>(null!)
+  const engine = useStore((s) => s.engine)!
+  const cylX = engine.geometry.cylX
 
   useFrame((_, dt) => {
     const s = useStore.getState()
+    if (!s.engine) return
     const active = (s.mode === 'combust' || s.mode === 'stress') && s.engineRunning
     if (!active) {
       // engine stopped: kill flashes and light, keep the crank where it is
@@ -34,11 +35,11 @@ export const SimDriver: React.FC = () => {
 
     let bright = 0
     let brightX = 0
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < s.engine.geometry.cylX.length; i++) {
       const m = flashes.current[i]
       if (!m) continue
       // burn window: peaks ~14° after each cylinder's firing TDC
-      const d = (simClock.thetaDeg - FIRE_DEG[i] + 720) % 720
+      const d = (simClock.thetaDeg - s.engine.geometry.fireDeg[i] + 720) % 720
       const k = Math.exp(-Math.pow((d - 14) / 16, 2))
       const mat = m.material as THREE.MeshBasicMaterial
       mat.opacity = (s.mode === 'combust' ? 0.85 : 0.4) * k
@@ -46,7 +47,7 @@ export const SimDriver: React.FC = () => {
       m.visible = k > 0.02
       if (k > bright) {
         bright = k
-        brightX = CYL_X[i]
+        brightX = s.engine.geometry.cylX[i]
       }
     }
     if (light.current) {
@@ -60,8 +61,8 @@ export const SimDriver: React.FC = () => {
 
   return (
     <group>
-      {CYL_X.map((x, i) => (
-        <mesh key={i} ref={(el) => (flashes.current[i] = el)} position={[x, 0.48, 0]}>
+      {cylX.map((x, i) => (
+        <mesh key={`${engine.meta.id}-${i}`} ref={(el) => (flashes.current[i] = el)} position={[x, 0.48, 0]}>
           <sphereGeometry args={[0.17, 14, 10]} />
           <meshBasicMaterial
             color="#ffae3c"

@@ -12,16 +12,17 @@ export * from './content'
  */
 export function useI18n() {
   const lang = useStore((s) => s.lang)
+  const engine = useStore((s) => s.engine)
   return {
     lang,
     t: (key: string, params?: Record<string, string | number>) => rawT(lang, key, params),
-    pName: (part: Parameters<typeof content.pName>[1]) => content.pName(lang, part),
-    pField: (part: Parameters<typeof content.pField>[1], field: Parameters<typeof content.pField>[2]) =>
-      content.pField(lang, part, field),
+    pName: (part: Parameters<typeof content.pName>[2]) => content.pName(lang, engine, part),
+    pField: (part: Parameters<typeof content.pField>[2], field: Parameters<typeof content.pField>[3]) =>
+      content.pField(lang, engine, part, field),
     sysName: (id: Parameters<typeof content.sysName>[1], fallback: string) =>
       content.sysName(lang, id, fallback),
     circuitName: (id: string, fallback: string) => content.circuitName(lang, id, fallback),
-    quizPrompt: (q: Parameters<typeof content.quizPrompt>[1]) => content.quizPrompt(lang, q),
-    quizOptions: (q: Parameters<typeof content.quizOptions>[1]) => content.quizOptions(lang, q),
+    quizPrompt: (q: Parameters<typeof content.quizPrompt>[2]) => content.quizPrompt(lang, engine, q),
+    quizOptions: (q: Parameters<typeof content.quizOptions>[2]) => content.quizOptions(lang, engine, q),
   }
 }

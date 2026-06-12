@@ -1,29 +1,42 @@
 import { create } from 'zustand'
 import type { Mode, Progress, QuizResult, SystemId, Vec3 } from './types'
-import { PART_MAP, REMOVAL_SEQUENCE } from './data/parts'
-import { QUIZ_QUESTIONS } from './data/quiz'
 import { t, type Lang } from './i18n/strings'
 import { pName, quizOptions } from './i18n/content'
+import type { EngineDefinition, EngineId } from './engines/types'
+import { getEngine } from './engines'
+import { engineSound } from './sim/engineSound'
+import { simClock } from './sim/engineCycle'
 
-const STORAGE_KEY = 's58-trainer-progress-v1'
+const LEGACY_STORAGE_KEY = 's58-trainer-progress-v1'
+const progressKey = (id: EngineId) => `trainer-progress-v1:${id}`
 
-function loadProgress(): Progress {
+const freshProgress = (): Progress => ({
+  trainee: 'Trainee',
+  partsInspected: [],
+  disassemblyCompleted: false,
+  disassemblyMistakes: 0,
+  reassemblyCompleted: false,
+  reassemblyMistakes: 0,
+  reassemblyAttempts: 0,
+  quizResults: [],
+})
+
+function loadProgress(id: EngineId): Progress {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const key = progressKey(id)
+    let raw = localStorage.getItem(key)
+    if (!raw && id === 's58') {
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY)
+      if (legacy) {
+        localStorage.setItem(key, legacy)
+        raw = legacy
+      }
+    }
     if (raw) return JSON.parse(raw)
   } catch {
     /* corrupted progress falls back to fresh state */
   }
-  return {
-    trainee: 'Trainee',
-    partsInspected: [],
-    disassemblyCompleted: false,
-    disassemblyMistakes: 0,
-    reassemblyCompleted: false,
-    reassemblyMistakes: 0,
-    reassemblyAttempts: 0,
-    quizResults: [],
-  }
+  return freshProgress()
 }
 
 export interface Feedback {
@@ -33,6 +46,7 @@ export interface Feedback {
 }
 
 interface State {
+  engine: EngineDefinition | null
   mode: Mode
   selectedId: string | null
   hoveredId: string | null
@@ -44,11 +58,11 @@ interface State {
   showLabels: boolean
   /** parts removed in disassembly / not yet placed in reassembly */
   removedIds: Set<string>
-  /** index of next step in REMOVAL_SEQUENCE */
+  /** index of next teardown step in active engine.removalSequence */
   disasmStep: number
   disasmMistakes: number
   /** reassembly */
-  reasmStep: number // index counting down through REMOVAL_SEQUENCE reversed
+  reasmStep: number // index counting down through active engine.removalSequence reversed
   reasmMistakes: number
   /** id of removed part currently being dragged back */
   carryingId: string | null
@@ -77,6 +91,8 @@ interface State {
   sideCollapsed: boolean
   infoCollapsed: boolean
 
+  selectEngine: (id: EngineId) => void
+  exitToLanding: () => void
   setMode: (m: Mode) => void
   select: (id: string | null) => void
   hover: (id: string | null) => void
@@ -114,11 +130,13 @@ interface State {
   exportCsv: () => void
 }
 
-function persist(p: Progress) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(p))
+function persist(engine: EngineDefinition | null, p: Progress) {
+  if (!engine) return
+  localStorage.setItem(progressKey(engine.meta.id), JSON.stringify(p))
 }
 
 export const useStore = create<State>((set, get) => ({
+  engine: null,
   mode: 'explore',
   selectedId: null,
   hoveredId: null,
@@ -139,7 +157,7 @@ export const useStore = create<State>((set, get) => ({
   quizAnswered: false,
   quizStartTs: 0,
   feedback: null,
-  progress: loadProgress(),
+  progress: freshProgress(),
   resetViewToken: 0,
   focusPartId: null,
   flowRpm: 3000,
@@ -154,7 +172,68 @@ export const useStore = create<State>((set, get) => ({
   sideCollapsed: localStorage.getItem('s58-side-collapsed') === '1',
   infoCollapsed: localStorage.getItem('s58-info-collapsed') === '1',
 
+  selectEngine: (id) => {
+    const engine = getEngine(id)
+    simClock.thetaDeg = 0
+    engineSound.stop()
+    localStorage.setItem('trainer-last-engine', id)
+    set({
+      engine,
+      mode: 'explore',
+      selectedId: null,
+      hoveredId: null,
+      offsets: {},
+      hiddenIds: new Set(),
+      isolatedSystem: null,
+      exploded: false,
+      showLabels: true,
+      removedIds: new Set(),
+      disasmStep: 0,
+      disasmMistakes: 0,
+      reasmStep: 0,
+      reasmMistakes: 0,
+      carryingId: null,
+      quizIndex: 0,
+      quizScore: 0,
+      quizMistakes: [],
+      quizAnswered: false,
+      quizStartTs: 0,
+      feedback: null,
+      progress: loadProgress(id),
+      resetViewToken: 0,
+      focusPartId: null,
+      flowRpm: Math.min(3000, engine.cycle.redlineRpm),
+      flowThrottle: 0.6,
+      flowCircuits: new Set(['intake', 'exhaust', 'coolant', 'oil']),
+      simRpm: Math.min(2400, engine.cycle.redlineRpm),
+      simLoad: 0.8,
+      simTimeScale: 0.05,
+      engineRunning: false,
+    })
+  },
+
+  exitToLanding: () => {
+    simClock.thetaDeg = 0
+    engineSound.stop()
+    set({
+      engine: null,
+      mode: 'explore',
+      selectedId: null,
+      hoveredId: null,
+      offsets: {},
+      hiddenIds: new Set(),
+      isolatedSystem: null,
+      exploded: false,
+      removedIds: new Set(),
+      carryingId: null,
+      feedback: null,
+      engineRunning: false,
+      progress: freshProgress(),
+    })
+  },
+
   setMode: (m) => {
+    if (!get().engine) return
     const base = {
       mode: m,
       selectedId: null,
@@ -245,22 +324,24 @@ export const useStore = create<State>((set, get) => ({
 
   markInspected: (id) =>
     set((s) => {
+      if (!s.engine) return {}
       if (s.progress.partsInspected.includes(id)) return {}
       const progress = { ...s.progress, partsInspected: [...s.progress.partsInspected, id] }
-      persist(progress)
+      persist(s.engine, progress)
       return { progress }
     }),
 
   attemptRemove: (id) => {
     const s = get()
     const lang = s.lang
-    if (s.mode !== 'disassembly') return
-    const expected = REMOVAL_SEQUENCE[s.disasmStep]
+    const engine = s.engine
+    if (!engine || s.mode !== 'disassembly') return
+    const expected = engine.removalSequence[s.disasmStep]
     if (!expected) return
-    const part = PART_MAP.get(id)
+    const part = engine.partMap.get(id)
     if (!part) return
     if (part.removalOrder === -1) {
-      get().flash({ kind: 'warn', text: t(lang, 'fb.structuralCore', { name: pName(lang, part) }) })
+      get().flash({ kind: 'warn', text: t(lang, 'fb.structuralCore', { name: pName(lang, engine, part) }) })
       return
     }
     if (s.removedIds.has(id)) return
@@ -268,12 +349,12 @@ export const useStore = create<State>((set, get) => ({
       const removed = new Set(s.removedIds)
       removed.add(id)
       const nextStep = s.disasmStep + 1
-      const done = nextStep >= REMOVAL_SEQUENCE.length
+      const done = nextStep >= engine.removalSequence.length
       set({ removedIds: removed, disasmStep: nextStep, selectedId: id })
-      get().flash({ kind: 'ok', text: t(lang, 'fb.removedCorrect', { name: pName(lang, part) }) })
+      get().flash({ kind: 'ok', text: t(lang, 'fb.removedCorrect', { name: pName(lang, engine, part) }) })
       if (done) {
         const progress = { ...s.progress, disassemblyCompleted: true, disassemblyMistakes: s.disasmMistakes }
-        persist(progress)
+        persist(engine, progress)
         set({ progress })
         get().flash({ kind: 'ok', text: t(lang, 'fb.teardownComplete') })
       }
@@ -281,34 +362,38 @@ export const useStore = create<State>((set, get) => ({
       const blockers = part.dependencies.filter((d) => !s.removedIds.has(d))
       const reason = blockers.length
         ? t(lang, 'fb.removeFirst', {
-            names: blockers.map((b) => pName(lang, PART_MAP.get(b)!)).join('、'),
+            names: blockers.map((b) => pName(lang, engine, engine.partMap.get(b)!)).join('、'),
           })
-        : t(lang, 'fb.outOfSequence', { name: pName(lang, expected) })
+        : t(lang, 'fb.outOfSequence', { name: pName(lang, engine, expected) })
       set({ disasmMistakes: s.disasmMistakes + 1 })
-      get().flash({ kind: 'warn', text: t(lang, 'fb.cannotRemove', { name: pName(lang, part), reason }) })
+      get().flash({ kind: 'warn', text: t(lang, 'fb.cannotRemove', { name: pName(lang, engine, part), reason }) })
     }
   },
 
   startReassembly: () => {
-    const all = new Set(REMOVAL_SEQUENCE.map((p) => p.id))
+    const engine = get().engine
+    if (!engine) return
+    const all = new Set(engine.removalSequence.map((p) => p.id))
     set((s) => {
       const progress = { ...s.progress, reassemblyAttempts: s.progress.reassemblyAttempts + 1 }
-      persist(progress)
-      return { removedIds: all, reasmStep: REMOVAL_SEQUENCE.length - 1, reasmMistakes: 0, carryingId: null, progress }
+      persist(engine, progress)
+      return { removedIds: all, reasmStep: engine.removalSequence.length - 1, reasmMistakes: 0, carryingId: null, progress }
     })
   },
 
   pickUpRemoved: (id) => {
     const s = get()
-    if (s.mode !== 'reassembly' || !s.removedIds.has(id)) return
+    if (!s.engine || s.mode !== 'reassembly' || !s.removedIds.has(id)) return
     set({ carryingId: id, selectedId: id })
   },
 
   attemptPlace: (id) => {
     const s = get()
     const lang = s.lang
-    const expected = REMOVAL_SEQUENCE[s.reasmStep]
-    const part = PART_MAP.get(id)
+    const engine = s.engine
+    if (!engine) return
+    const expected = engine.removalSequence[s.reasmStep]
+    const part = engine.partMap.get(id)
     if (!expected || !part) return
     if (id === expected.id) {
       const removed = new Set(s.removedIds)
@@ -316,10 +401,10 @@ export const useStore = create<State>((set, get) => ({
       const nextStep = s.reasmStep - 1
       const done = nextStep < 0
       set({ removedIds: removed, reasmStep: nextStep, carryingId: null })
-      get().flash({ kind: 'ok', text: t(lang, 'fb.installedCorrect', { name: pName(lang, part) }) })
+      get().flash({ kind: 'ok', text: t(lang, 'fb.installedCorrect', { name: pName(lang, engine, part) }) })
       if (done) {
         const progress = { ...s.progress, reassemblyCompleted: true, reassemblyMistakes: s.reasmMistakes }
-        persist(progress)
+        persist(engine, progress)
         set({ progress })
         get().flash({ kind: 'ok', text: t(lang, 'fb.reassemblyComplete') })
       }
@@ -327,7 +412,7 @@ export const useStore = create<State>((set, get) => ({
       set({ reasmMistakes: s.reasmMistakes + 1, carryingId: null })
       get().flash({
         kind: 'warn',
-        text: t(lang, 'fb.cannotInstall', { name: pName(lang, part), expected: pName(lang, expected) }),
+        text: t(lang, 'fb.cannotInstall', { name: pName(lang, engine, part), expected: pName(lang, engine, expected) }),
       })
     }
   },
@@ -338,21 +423,22 @@ export const useStore = create<State>((set, get) => ({
   answerIdentify: (clickedId) => {
     const s = get()
     const lang = s.lang
-    if (s.mode !== 'quiz' || s.quizAnswered) return
-    const q = QUIZ_QUESTIONS[s.quizIndex]
+    const engine = s.engine
+    if (!engine || s.mode !== 'quiz' || s.quizAnswered) return
+    const q = engine.quiz[s.quizIndex]
     if (!q || q.kind !== 'identify') return
     if (clickedId === q.targetPartId || q.altTargetIds?.includes(clickedId)) {
       set({ quizScore: s.quizScore + 1, quizAnswered: true })
       get().flash({ kind: 'ok', text: t(lang, 'fb.correct') })
     } else {
-      const target = PART_MAP.get(q.targetPartId!)
-      const clicked = PART_MAP.get(clickedId)
+      const target = engine.partMap.get(q.targetPartId!)
+      const clicked = engine.partMap.get(clickedId)
       set({ quizMistakes: [...s.quizMistakes, q.id], quizAnswered: true, selectedId: q.targetPartId! })
       get().flash({
         kind: 'warn',
         text: t(lang, 'fb.identifyWrong', {
-          clicked: clicked ? pName(lang, clicked) : t(lang, 'fb.anotherPart'),
-          answer: target ? pName(lang, target) : '',
+          clicked: clicked ? pName(lang, engine, clicked) : t(lang, 'fb.anotherPart'),
+          answer: target ? pName(lang, engine, target) : '',
         }),
       })
     }
@@ -361,8 +447,9 @@ export const useStore = create<State>((set, get) => ({
   answerChoice: (index) => {
     const s = get()
     const lang = s.lang
-    if (s.quizAnswered) return
-    const q = QUIZ_QUESTIONS[s.quizIndex]
+    const engine = s.engine
+    if (!engine || s.quizAnswered) return
+    const q = engine.quiz[s.quizIndex]
     if (!q || q.kind !== 'choice') return
     if (index === q.correctIndex) {
       set({ quizScore: s.quizScore + 1, quizAnswered: true })
@@ -372,7 +459,7 @@ export const useStore = create<State>((set, get) => ({
       get().flash({
         kind: 'warn',
         text: t(lang, 'fb.choiceWrong', {
-          answer: quizOptions(lang, q)[q.correctIndex!],
+          answer: quizOptions(lang, engine, q)[q.correctIndex!],
         }),
       })
     }
@@ -380,17 +467,19 @@ export const useStore = create<State>((set, get) => ({
 
   nextQuestion: () => {
     const s = get()
+    const engine = s.engine
+    if (!engine) return
     const next = s.quizIndex + 1
-    if (next >= QUIZ_QUESTIONS.length) {
+    if (next >= engine.quiz.length) {
       const result: QuizResult = {
         date: new Date().toISOString(),
         score: s.quizScore,
-        total: QUIZ_QUESTIONS.length,
+        total: engine.quiz.length,
         mistakes: s.quizMistakes,
         timeSec: Math.round((Date.now() - s.quizStartTs) / 1000),
       }
       const progress = { ...s.progress, quizResults: [...s.progress.quizResults, result] }
-      persist(progress)
+      persist(engine, progress)
       set({ progress, quizIndex: next, selectedId: null })
     } else {
       set({ quizIndex: next, quizAnswered: false, selectedId: null })
@@ -398,17 +487,20 @@ export const useStore = create<State>((set, get) => ({
   },
 
   exportCsv: () => {
+    const engine = get().engine
+    if (!engine) return
     const p = get().progress
     const rows = [
-      ['metric', 'value'],
-      ['trainee', p.trainee],
-      ['parts_inspected', String(p.partsInspected.length)],
-      ['disassembly_completed', String(p.disassemblyCompleted)],
-      ['disassembly_mistakes', String(p.disassemblyMistakes)],
-      ['reassembly_completed', String(p.reassemblyCompleted)],
-      ['reassembly_attempts', String(p.reassemblyAttempts)],
-      ['reassembly_mistakes', String(p.reassemblyMistakes)],
+      ['engine_id', 'metric', 'value'],
+      [engine.meta.id, 'trainee', p.trainee],
+      [engine.meta.id, 'parts_inspected', String(p.partsInspected.length)],
+      [engine.meta.id, 'disassembly_completed', String(p.disassemblyCompleted)],
+      [engine.meta.id, 'disassembly_mistakes', String(p.disassemblyMistakes)],
+      [engine.meta.id, 'reassembly_completed', String(p.reassemblyCompleted)],
+      [engine.meta.id, 'reassembly_attempts', String(p.reassemblyAttempts)],
+      [engine.meta.id, 'reassembly_mistakes', String(p.reassemblyMistakes)],
       ...p.quizResults.map((r, i) => [
+        engine.meta.id,
         `quiz_${i + 1}`,
         `${r.score}/${r.total} in ${r.timeSec}s on ${r.date}`,
       ]),
@@ -417,7 +509,7 @@ export const useStore = create<State>((set, get) => ({
     const blob = new Blob([csv], { type: 'text/csv' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = 's58-training-report.csv'
+    a.download = `${engine.meta.id}-training-report.csv`
     a.click()
     URL.revokeObjectURL(a.href)
   },

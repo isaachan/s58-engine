@@ -1,12 +1,13 @@
 /**
  * Synthesized engine audio (Web Audio, no asset files so the app stays
- * fully offline). The note is built from harmonics of the I6 firing
- * frequency (3 power strokes per revolution): crank-order and firing-order
+ * fully offline). The note is built from harmonics of the active engine's
+ * firing frequency: crank-order and firing-order
  * sawtooth/square oscillators through a lowpass filter whose cutoff opens
  * with rpm and load, plus band-passed noise for intake/exhaust rush.
  * `update()` retunes everything smoothly, so revving glides like a real
  * engine instead of stepping.
  */
+import type { SoundParams } from '../engines/types'
 
 interface Voice {
   osc: OscillatorNode
@@ -31,7 +32,7 @@ class EngineSound {
   private noiseGain: GainNode | null = null
   private running = false
 
-  start(rpm: number, load: number) {
+  start(rpm: number, load: number, p: SoundParams) {
     if (this.running) return
     const ctx = (this.ctx ??= new AudioContext())
     void ctx.resume()
@@ -82,20 +83,21 @@ class EngineSound {
     this.noiseGain = noiseGain
     this.running = true
 
-    this.update(rpm, load)
+    this.update(rpm, load, p)
     master.gain.setTargetAtTime(0.16, ctx.currentTime, 0.25) // start-up swell
   }
 
-  update(rpm: number, load: number) {
+  update(rpm: number, load: number, p: SoundParams) {
     if (!this.running || !this.ctx) return
     const t = this.ctx.currentTime
-    const fireHz = (rpm / 60) * 3 // I6 four-stroke: 3 fires per revolution
+    const fireHz = (rpm / 60) * p.firesPerRev
     for (const v of this.voices) {
       v.osc.frequency.setTargetAtTime(fireHz * v.order, t, 0.06)
     }
-    this.filter!.frequency.setTargetAtTime(280 + load * 2400 + (rpm / 7200) * 2000, t, 0.08)
-    this.noiseGain!.gain.setTargetAtTime(0.015 + load * 0.07 + (rpm / 7200) * 0.03, t, 0.1)
-    this.master!.gain.setTargetAtTime(0.1 + 0.1 * load + 0.05 * (rpm / 7200), t, 0.12)
+    const rpmNorm = rpm / p.redlineRpm
+    this.filter!.frequency.setTargetAtTime(280 + load * 2400 + rpmNorm * 2000, t, 0.08)
+    this.noiseGain!.gain.setTargetAtTime(0.015 + load * 0.07 + rpmNorm * 0.03, t, 0.1)
+    this.master!.gain.setTargetAtTime(0.1 + 0.1 * load + 0.05 * rpmNorm, t, 0.12)
   }
 
   stop() {

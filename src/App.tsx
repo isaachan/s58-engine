@@ -3,6 +3,7 @@ import { EngineScene } from './engine/EngineScene'
 import { InfoPanel } from './ui/InfoPanel'
 import { SidePanel } from './ui/SidePanel'
 import { TopBar, BottomToolbar, Toast } from './ui/Toolbar'
+import { LandingScreen } from './ui/LandingScreen'
 import { useStore } from './store'
 import { engineSound } from './sim/engineSound'
 
@@ -14,21 +15,22 @@ const EngineAudio: React.FC = () => {
   const flowThrottle = useStore((s) => s.flowThrottle)
   const simRpm = useStore((s) => s.simRpm)
   const simLoad = useStore((s) => s.simLoad)
+  const engine = useStore((s) => s.engine)
 
-  const active = running && (mode === 'flow' || mode === 'combust' || mode === 'stress')
+  const active = !!engine && running && (mode === 'flow' || mode === 'combust' || mode === 'stress')
   const rpm = mode === 'flow' ? flowRpm : simRpm
   const load = mode === 'flow' ? flowThrottle : simLoad
 
   useEffect(() => {
-    if (active) engineSound.start(rpm, load)
+    if (active && engine) engineSound.start(rpm, load, engine.sound)
     else engineSound.stop()
     // start/stop only reacts to activation; retuning is handled below
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active])
+  }, [active, engine])
 
   useEffect(() => {
-    if (active) engineSound.update(rpm, load)
-  }, [active, rpm, load])
+    if (active && engine) engineSound.update(rpm, load, engine.sound)
+  }, [active, rpm, load, engine])
 
   useEffect(() => () => engineSound.stop(), [])
   return null
@@ -46,19 +48,28 @@ const ThemeApplier: React.FC = () => {
   return null
 }
 
-export const App: React.FC = () => (
-  <div className="app">
-    <ThemeApplier />
-    <EngineAudio />
-    <TopBar />
-    <div className="main">
-      <SidePanel />
-      <div className="viewport">
-        <EngineScene />
-        <Toast />
-        <BottomToolbar />
-      </div>
-      <InfoPanel />
+export const App: React.FC = () => {
+  const engine = useStore((s) => s.engine)
+  return (
+    <div className="app">
+      <ThemeApplier />
+      <EngineAudio />
+      {engine ? (
+        <>
+          <TopBar />
+          <div className="main">
+            <SidePanel />
+            <div className="viewport">
+              <EngineScene />
+              <Toast />
+              <BottomToolbar />
+            </div>
+            <InfoPanel />
+          </div>
+        </>
+      ) : (
+        <LandingScreen />
+      )}
     </div>
-  </div>
-)
+  )
+}

@@ -1,15 +1,14 @@
 import React from 'react'
 import { useStore } from '../store'
-import { PART_MAP, REMOVAL_SEQUENCE } from '../data/parts'
-import { SYSTEMS, SYSTEM_ORDER } from '../data/systems'
-import { QUIZ_QUESTIONS } from '../data/quiz'
-import { CIRCUITS, computeFlow } from '../sim/flow'
+import { SYSTEMS } from '../data/systems'
+import { computeFlow } from '../sim/flow'
 import { getCycle } from '../sim/engineCycle'
 import { useEffect, useRef } from 'react'
 import { useI18n } from '../i18n'
 
 const ExplodedPanel: React.FC = () => {
   const isolated = useStore((s) => s.isolatedSystem)
+  const engine = useStore((s) => s.engine)!
   const { t, sysName } = useI18n()
   return (
     <div className="side-content">
@@ -19,7 +18,7 @@ const ExplodedPanel: React.FC = () => {
         <button className={!isolated ? 'active' : ''} onClick={() => useStore.getState().isolate(null)}>
           {t('exploded.allSystems')}
         </button>
-        {SYSTEM_ORDER.map((id) => (
+        {engine.systemOrder.map((id) => (
           <button
             key={id}
             className={isolated === id ? 'active' : ''}
@@ -35,12 +34,13 @@ const ExplodedPanel: React.FC = () => {
 }
 
 const DisassemblyPanel: React.FC = () => {
+  const engine = useStore((s) => s.engine)!
   const step = useStore((s) => s.disasmStep)
   const mistakes = useStore((s) => s.disasmMistakes)
   const { t, pName, pField } = useI18n()
-  const total = REMOVAL_SEQUENCE.length
+  const total = engine.removalSequence.length
   const done = step >= total
-  const current = REMOVAL_SEQUENCE[step]
+  const current = engine.removalSequence[step]
 
   return (
     <div className="side-content">
@@ -68,7 +68,7 @@ const DisassemblyPanel: React.FC = () => {
       <details className="seq-details">
         <summary>{t('dis.fullSequence')}</summary>
         <ol className="seq-list">
-          {REMOVAL_SEQUENCE.map((p, i) => (
+          {engine.removalSequence.map((p, i) => (
             <li key={p.id} className={i < step ? 'done' : i === step ? 'current' : ''}>
               {pName(p)}
             </li>
@@ -83,16 +83,17 @@ const DisassemblyPanel: React.FC = () => {
 }
 
 const ReassemblyPanel: React.FC = () => {
+  const engine = useStore((s) => s.engine)!
   const removedIds = useStore((s) => s.removedIds)
   const reasmStep = useStore((s) => s.reasmStep)
   const mistakes = useStore((s) => s.reasmMistakes)
   const carrying = useStore((s) => s.carryingId)
   const { t, pName } = useI18n()
-  const total = REMOVAL_SEQUENCE.length
+  const total = engine.removalSequence.length
   const placed = total - removedIds.size
   const done = reasmStep < 0
 
-  const tray = [...REMOVAL_SEQUENCE].reverse().filter((p) => removedIds.has(p.id))
+  const tray = [...engine.removalSequence].reverse().filter((p) => removedIds.has(p.id))
 
   return (
     <div className="side-content">
@@ -115,7 +116,7 @@ const ReassemblyPanel: React.FC = () => {
           </p>
           {carrying && (
             <div className="step-card">
-              {t('reasm.carrying')} <strong>{pName(PART_MAP.get(carrying)!)}</strong>
+              {t('reasm.carrying')} <strong>{pName(engine.partMap.get(carrying)!)}</strong>
             </div>
           )}
           <div className="tray">
@@ -139,13 +140,14 @@ const ReassemblyPanel: React.FC = () => {
 }
 
 const QuizPanel: React.FC = () => {
+  const engine = useStore((s) => s.engine)!
   const idx = useStore((s) => s.quizIndex)
   const score = useStore((s) => s.quizScore)
   const answered = useStore((s) => s.quizAnswered)
   const progress = useStore((s) => s.progress)
   const { t, quizPrompt, quizOptions } = useI18n()
-  const finished = idx >= QUIZ_QUESTIONS.length
-  const q = QUIZ_QUESTIONS[idx]
+  const finished = idx >= engine.quiz.length
+  const q = engine.quiz[idx]
 
   if (finished) {
     const last = progress.quizResults[progress.quizResults.length - 1]
@@ -161,7 +163,7 @@ const QuizPanel: React.FC = () => {
             <p className="small">{t('quiz.review')}</p>
             <ul className="seq-list">
               {last.mistakes.map((id) => {
-                const mq = QUIZ_QUESTIONS.find((x) => x.id === id)
+                const mq = engine.quiz.find((x) => x.id === id)
                 return <li key={id}>{mq ? quizPrompt(mq) : id}</li>
               })}
             </ul>
@@ -175,7 +177,7 @@ const QuizPanel: React.FC = () => {
   return (
     <div className="side-content">
       <h3>{t('quiz.title')}</h3>
-      <p className="small muted">{t('quiz.questionOf', { n: idx + 1, total: QUIZ_QUESTIONS.length, score })}</p>
+      <p className="small muted">{t('quiz.questionOf', { n: idx + 1, total: engine.quiz.length, score })}</p>
       <div className="step-card">
         <strong>{quizPrompt(q)}</strong>
         {q.kind === 'identify' && <p className="small muted">{t('quiz.clickPart')}</p>}
@@ -191,7 +193,7 @@ const QuizPanel: React.FC = () => {
       )}
       {answered && (
         <button className="primary" onClick={() => useStore.getState().nextQuestion()}>
-          {idx + 1 === QUIZ_QUESTIONS.length ? t('quiz.finish') : t('quiz.next')}
+          {idx + 1 === engine.quiz.length ? t('quiz.finish') : t('quiz.next')}
         </button>
       )}
     </div>
@@ -199,13 +201,14 @@ const QuizPanel: React.FC = () => {
 }
 
 const ExplorePanel: React.FC = () => {
+  const engine = useStore((s) => s.engine)!
   const progress = useStore((s) => s.progress)
-  const { t } = useI18n()
-  const totalParts = PART_MAP.size
+  const { t, lang } = useI18n()
+  const totalParts = engine.partMap.size
   return (
     <div className="side-content">
       <h3>{t('explore.title')}</h3>
-      <p className="small muted">{t('explore.intro')}</p>
+      <p className="small muted">{lang === 'zh' ? engine.meta.exploreIntro.zh : engine.meta.exploreIntro.en}</p>
       <div className="stat-grid">
         <div className="stat">
           <span className="stat-num">
@@ -234,11 +237,12 @@ const ExplorePanel: React.FC = () => {
 }
 
 const FlowPanel: React.FC = () => {
+  const engine = useStore((s) => s.engine)!
   const rpm = useStore((s) => s.flowRpm)
   const throttle = useStore((s) => s.flowThrottle)
   const circuits = useStore((s) => s.flowCircuits)
   const { t, circuitName } = useI18n()
-  const f = computeFlow({ rpm, throttle })
+  const f = computeFlow(engine, { rpm, throttle })
 
   return (
     <div className="side-content">
@@ -249,8 +253,8 @@ const FlowPanel: React.FC = () => {
         <span>{t('common.engineSpeed')}</span>
         <input
           type="range"
-          min={800}
-          max={7200}
+          min={engine.cycle.idleRpm}
+          max={engine.cycle.redlineRpm}
           step={50}
           value={rpm}
           onChange={(e) => useStore.getState().setFlowRpm(Number(e.target.value))}
@@ -271,7 +275,7 @@ const FlowPanel: React.FC = () => {
       </label>
 
       <div className="sys-list">
-        {CIRCUITS.map((c) => (
+        {engine.circuits.map((c) => (
           <button
             key={c.id}
             className={circuits.has(c.id) ? 'active' : ''}
@@ -345,6 +349,7 @@ const EngineButton: React.FC = () => {
 }
 
 const SimControls: React.FC = () => {
+  const engine = useStore((s) => s.engine)!
   const rpm = useStore((s) => s.simRpm)
   const load = useStore((s) => s.simLoad)
   const ts = useStore((s) => s.simTimeScale)
@@ -354,7 +359,7 @@ const SimControls: React.FC = () => {
       <EngineButton />
       <label className="slider-row">
         <span>{t('common.engineSpeed')}</span>
-        <input type="range" min={800} max={7200} step={50} value={rpm}
+        <input type="range" min={engine.cycle.idleRpm} max={engine.cycle.redlineRpm} step={50} value={rpm}
           onChange={(e) => useStore.getState().setSimRpm(Number(e.target.value))} />
         <strong>{rpm} rpm</strong>
       </label>
@@ -375,10 +380,11 @@ const SimControls: React.FC = () => {
 }
 
 const CombustionPanel: React.FC = () => {
+  const engine = useStore((s) => s.engine)!
   const rpm = useStore((s) => s.simRpm)
   const load = useStore((s) => s.simLoad)
   const { t } = useI18n()
-  const c = getCycle(rpm, load)
+  const c = getCycle(engine, rpm, load)
   const tdcLabel = t('chart.tdc')
   const bdcLabel = t('chart.bdc')
 
@@ -444,23 +450,12 @@ const CombustionPanel: React.FC = () => {
   )
 }
 
-const STRESS_PARTS: [string, string][] = [
-  ['piston-1', 'stress.part.pistons'],
-  ['crankshaft', 'stress.part.crankshaft'],
-  ['cylinder-head', 'stress.part.head'],
-  ['cylinder-block', 'stress.part.block'],
-  ['turbo-front', 'stress.part.turbos'],
-  ['exhaust-manifold-front', 'stress.part.exhaust'],
-  ['timing-chain', 'stress.part.timing'],
-  ['intake-manifold', 'stress.part.intake'],
-  ['hp-fuel-pump', 'stress.part.fuel'],
-]
-
 const StressPanel: React.FC = () => {
+  const engine = useStore((s) => s.engine)!
   const rpm = useStore((s) => s.simRpm)
   const load = useStore((s) => s.simLoad)
   const { t } = useI18n()
-  const c = getCycle(rpm, load)
+  const c = getCycle(engine, rpm, load)
   const meanLabel = t('stress.meanLine')
 
   return (
@@ -504,7 +499,7 @@ const StressPanel: React.FC = () => {
         }}
       />
       <div className="util-list">
-        {STRESS_PARTS.map(([id, key]) => {
+        {engine.stressParts.map(([id, key]) => {
           const u = Math.min(c.partUtil[id] ?? 0, 1.2)
           const hue = 220 * (1 - Math.min(u, 1))
           return (
@@ -527,9 +522,11 @@ const StressPanel: React.FC = () => {
 }
 
 export const SidePanel: React.FC = () => {
+  const engine = useStore((s) => s.engine)
   const mode = useStore((s) => s.mode)
   const collapsed = useStore((s) => s.sideCollapsed)
   const { t } = useI18n()
+  if (!engine) return null
   return (
     <aside className={`side-panel ${collapsed ? 'collapsed' : ''}`}>
       <button

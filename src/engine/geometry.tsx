@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import React, { useMemo } from 'react'
 import { RoundedBox } from '@react-three/drei'
-import { PIN_ANGLES } from '../sim/engineCycle'
+import type { GeometryLayout } from '../engines/types'
+import type { PartDef } from '../types'
 
 /**
  * Procedural geometry builders. Each builder composes primitive meshes that
@@ -10,6 +11,8 @@ import { PIN_ANGLES } from '../sim/engineCycle'
  */
 export interface BuilderProps {
   material: THREE.Material
+  layout: GeometryLayout
+  params?: PartDef['buildParams']
 }
 
 type Builder = React.FC<BuilderProps>
@@ -136,20 +139,21 @@ const Sprocket: React.FC<{ material: THREE.Material; r: number; w: number; teeth
   </group>
 )
 
-const CYLS = [-1.25, -0.75, -0.25, 0.25, 0.75, 1.25]
-
 /* ---------------------------------- block ---------------------------------- */
 
-const Block: Builder = ({ material }) => (
+const Block: Builder = ({ material, layout }) => {
+  const cyls = layout.cylX
+  const blockW = layout.blockHalfLen * 2
+  return (
   <group>
     {/* upper crankcase */}
-    <CastBody material={material} w={3.3} h={0.62} d={1.0} r={0.05} position={[0, 0.26, 0]} />
+    <CastBody material={material} w={blockW} h={0.62} d={1.0} r={0.05} position={[0, 0.26, 0]} />
     {/* deck plate */}
     <mesh material={material} position={[0, 0.575, 0]}>
-      <boxGeometry args={[3.34, 0.035, 1.02]} />
+      <boxGeometry args={[blockW + 0.04, 0.035, 1.02]} />
     </mesh>
     {/* bores: recessed dark circles + rim */}
-    {CYLS.map((x) => (
+    {cyls.map((x) => (
       <group key={x} position={[x, 0.59, 0]}>
         <mesh material={material} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.185, 0.012, 8, 28]} />
@@ -164,18 +168,18 @@ const Block: Builder = ({ material }) => (
       </group>
     ))}
     {/* skirt, slightly tapered via two stacked casts */}
-    <CastBody material={material} w={3.3} h={0.34} d={0.9} r={0.05} position={[0, -0.22, 0]} />
+    <CastBody material={material} w={blockW} h={0.34} d={0.9} r={0.05} position={[0, -0.22, 0]} />
     {/* bedplate girdle */}
-    <CastBody material={material} w={3.3} h={0.24} d={0.8} r={0.04} position={[0, -0.5, 0]} />
+    <CastBody material={material} w={blockW} h={0.24} d={0.8} r={0.04} position={[0, -0.5, 0]} />
     {/* main cap bolt bosses along girdle */}
-    {[-1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5].map((x) => (
+    {Array.from({ length: cyls.length + 1 }, (_, i) => -layout.blockHalfLen + (i * blockW) / cyls.length).map((x) => (
       <group key={x}>
         <Bolt material={material} p={[x, -0.63, 0.18]} rot={[Math.PI, 0, 0]} />
         <Bolt material={material} p={[x, -0.63, -0.18]} rot={[Math.PI, 0, 0]} />
       </group>
     ))}
     {/* side ribbing */}
-    {[-1.2, -0.7, -0.2, 0.3, 0.8, 1.3].map((x) => (
+    {cyls.map((x) => (
       <group key={x}>
         <mesh material={material} position={[x, 0.05, 0.51]}>
           <boxGeometry args={[0.05, 0.62, 0.035]} />
@@ -186,20 +190,20 @@ const Block: Builder = ({ material }) => (
       </group>
     ))}
     <mesh material={material} position={[0, -0.07, 0.52]}>
-      <boxGeometry args={[3.2, 0.05, 0.03]} />
+      <boxGeometry args={[blockW - 0.1, 0.05, 0.03]} />
     </mesh>
     <mesh material={material} position={[0, -0.07, -0.52]}>
-      <boxGeometry args={[3.2, 0.05, 0.03]} />
+      <boxGeometry args={[blockW - 0.1, 0.05, 0.03]} />
     </mesh>
     {/* rear bellhousing flange */}
-    <mesh material={material} position={[1.68, -0.1, 0]} rotation={[0, 0, Math.PI / 2]}>
+    <mesh material={material} position={[layout.blockHalfLen + 0.03, -0.1, 0]} rotation={[0, 0, Math.PI / 2]}>
       <cylinderGeometry args={[0.52, 0.52, 0.06, 36]} />
     </mesh>
     {/* front accessory bosses */}
-    <mesh material={material} position={[-1.67, 0.1, 0.3]} rotation={[0, 0, Math.PI / 2]}>
+    <mesh material={material} position={[-layout.blockHalfLen - 0.02, 0.1, 0.3]} rotation={[0, 0, Math.PI / 2]}>
       <cylinderGeometry args={[0.09, 0.09, 0.08, 16]} />
     </mesh>
-    <mesh material={material} position={[-1.67, -0.25, -0.25]} rotation={[0, 0, Math.PI / 2]}>
+    <mesh material={material} position={[-layout.blockHalfLen - 0.02, -0.25, -0.25]} rotation={[0, 0, Math.PI / 2]}>
       <cylinderGeometry args={[0.07, 0.07, 0.08, 16]} />
     </mesh>
     {/* engine mount plates with bolts */}
@@ -219,23 +223,27 @@ const Block: Builder = ({ material }) => (
       <cylinderGeometry args={[0.05, 0.05, 0.06, 12]} />
     </mesh>
   </group>
-)
+  )
+}
 
 /* ---------------------------------- head ---------------------------------- */
 
-const Head: Builder = ({ material }) => (
+const Head: Builder = ({ material, layout }) => {
+  const cyls = layout.cylX
+  const blockW = layout.blockHalfLen * 2
+  return (
   <group>
-    <CastBody material={material} w={3.3} h={0.36} d={0.95} r={0.05} position={[0, -0.04, 0]} />
+    <CastBody material={material} w={blockW} h={0.36} d={0.95} r={0.05} position={[0, -0.04, 0]} />
     {/* cam carrier ledge */}
-    <CastBody material={material} w={3.3} h={0.14} d={0.78} r={0.04} position={[0, 0.2, 0]} />
+    <CastBody material={material} w={blockW} h={0.14} d={0.78} r={0.04} position={[0, 0.2, 0]} />
     {/* cam bearing towers */}
-    {[-1.45, -0.95, -0.45, 0.05, 0.55, 1.05, 1.5].map((x) => (
+    {Array.from({ length: cyls.length + 1 }, (_, i) => -layout.blockHalfLen + (i * blockW) / cyls.length).map((x) => (
       <mesh key={x} material={material} position={[x, 0.3, 0]}>
         <boxGeometry args={[0.09, 0.1, 0.72]} />
       </mesh>
     ))}
     {/* intake ports: oval flanges */}
-    {CYLS.map((x) => (
+    {cyls.map((x) => (
       <group key={`i${x}`} position={[x, -0.04, 0.49]}>
         <mesh material={material} rotation={[Math.PI / 2, 0, 0]} scale={[1, 1, 1.4]}>
           <cylinderGeometry args={[0.085, 0.095, 0.06, 18]} />
@@ -244,7 +252,7 @@ const Head: Builder = ({ material }) => (
       </group>
     ))}
     {/* exhaust ports with stud pairs */}
-    {CYLS.map((x) => (
+    {cyls.map((x) => (
       <group key={`e${x}`} position={[x, -0.06, -0.49]}>
         <mesh material={material} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.075, 0.085, 0.06, 18]} />
@@ -255,30 +263,33 @@ const Head: Builder = ({ material }) => (
       </group>
     ))}
     {/* injector bosses, angled on the intake side */}
-    {CYLS.map((x) => (
+    {cyls.map((x) => (
       <mesh key={`inj${x}`} material={material} position={[x, 0.05, 0.38]} rotation={[0.5, 0, 0]}>
         <cylinderGeometry args={[0.045, 0.045, 0.14, 12]} />
       </mesh>
     ))}
     {/* front VANOS housing bulge */}
-    <RoundedBox material={material} args={[0.18, 0.42, 0.8]} radius={0.05} position={[-1.6, 0.05, 0]} />
+    <RoundedBox material={material} args={[0.18, 0.42, 0.8]} radius={0.05} position={[-layout.blockHalfLen + 0.05, 0.05, 0]} />
   </group>
-)
+  )
+}
 
 /* ------------------------------- valve cover ------------------------------- */
 
-const ValveCover: Builder = ({ material }) => {
+const ValveCover: Builder = ({ material, layout }) => {
+  const cyls = layout.cylX
+  const blockW = layout.blockHalfLen * 2
   const shellGeo = useMemo(() => {
-    const g = new THREE.ExtrudeGeometry(roundedRect(0.86, 0.3, 0.1), { depth: 3.24, bevelEnabled: false })
+    const g = new THREE.ExtrudeGeometry(roundedRect(0.86, 0.3, 0.1), { depth: blockW - 0.06, bevelEnabled: false })
     g.rotateY(Math.PI / 2)
-    g.translate(-1.62, 0.05, 0)
+    g.translate(-(blockW - 0.06) / 2, 0.05, 0)
     return g
-  }, [])
+  }, [blockW])
   return (
     <group>
       <mesh material={material} geometry={shellGeo} />
       {/* plug tube recesses along the centerline */}
-      {CYLS.map((x) => (
+      {cyls.map((x) => (
         <mesh key={x} material={material} position={[x, 0.21, 0]}>
           <cylinderGeometry args={[0.062, 0.075, 0.05, 16]} />
         </mesh>
@@ -286,7 +297,7 @@ const ValveCover: Builder = ({ material }) => {
       {/* longitudinal cast ribs */}
       {[0.26, -0.26].map((z) => (
         <mesh key={z} material={material} position={[0, 0.19, z]} rotation={[z > 0 ? -0.22 : 0.22, 0, 0]}>
-          <boxGeometry args={[3.0, 0.025, 0.1]} />
+          <boxGeometry args={[blockW - 0.3, 0.025, 0.1]} />
         </mesh>
       ))}
       {/* oil filler cap */}
@@ -301,7 +312,7 @@ const ValveCover: Builder = ({ material }) => {
       {/* badge plate */}
       <RoundedBox material={material} args={[0.5, 0.02, 0.18]} radius={0.01} position={[0.9, 0.21, 0]} />
       {/* perimeter bolts */}
-      {[-1.5, -0.9, -0.3, 0.3, 0.9, 1.5].map((x) => (
+      {cyls.map((x) => (
         <group key={x}>
           <Bolt material={material} p={[x, -0.07, 0.42]} r={0.018} rot={[0, 0, 0]} />
           <Bolt material={material} p={[x, -0.07, -0.42]} r={0.018} rot={[0, 0, 0]} />
@@ -317,19 +328,19 @@ const ValveCover: Builder = ({ material }) => {
 
 /* --------------------------------- camshaft --------------------------------- */
 
-const Camshaft: Builder = ({ material }) => (
+const Camshaft: Builder = ({ material, layout }) => (
   <group>
     <mesh material={material} rotation={[0, 0, Math.PI / 2]}>
-      <cylinderGeometry args={[0.038, 0.038, 3.1, 14]} />
+      <cylinderGeometry args={[0.038, 0.038, layout.blockHalfLen * 2 - 0.2, 14]} />
     </mesh>
     {/* journals */}
-    {[-1.45, -0.95, -0.45, 0.05, 0.55, 1.05, 1.45].map((x) => (
+    {Array.from({ length: layout.cylX.length + 1 }, (_, i) => -layout.blockHalfLen + (i * layout.blockHalfLen * 2) / layout.cylX.length).map((x) => (
       <mesh key={x} material={material} position={[x, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.052, 0.052, 0.06, 16]} />
       </mesh>
     ))}
     {/* egg-profile lobes, phased per cylinder (firing order spread) */}
-    {CYLS.map((x, i) => {
+    {layout.cylX.map((x, i) => {
       const phase = (i * 240 * Math.PI) / 180
       return (
         <group key={x}>
@@ -339,11 +350,11 @@ const Camshaft: Builder = ({ material }) => (
       )
     })}
     {/* front nose for the phaser */}
-    <mesh material={material} position={[-1.6, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+    <mesh material={material} position={[-layout.blockHalfLen + 0.05, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
       <cylinderGeometry args={[0.05, 0.05, 0.12, 12]} />
     </mesh>
     {/* rear HPFP drive cam */}
-    <mesh material={material} geometry={lobeGeo} position={[1.52, 0, 0]} rotation={[0, Math.PI / 2, 1.1]} scale={1.2} />
+    <mesh material={material} geometry={lobeGeo} position={[layout.blockHalfLen - 0.13, 0, 0]} rotation={[0, Math.PI / 2, 1.1]} scale={1.2} />
   </group>
 )
 
@@ -398,8 +409,8 @@ const Piston: Builder = ({ material }) => (
 
 /* -------------------------------- crankshaft -------------------------------- */
 
-const Crankshaft: Builder = ({ material }) => {
-  const journals = [-1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5]
+const Crankshaft: Builder = ({ material, layout }) => {
+  const journals = Array.from({ length: layout.cylX.length + 1 }, (_, i) => -layout.blockHalfLen + (i * layout.blockHalfLen * 2) / layout.cylX.length)
   return (
     <group>
       {journals.map((x) => (
@@ -407,10 +418,10 @@ const Crankshaft: Builder = ({ material }) => {
           <cylinderGeometry args={[0.105, 0.105, 0.13, 20]} />
         </mesh>
       ))}
-      {CYLS.map((x, i) => {
-        const ang = (PIN_ANGLES[i] * Math.PI) / 180
-        const py = Math.cos(ang) * 0.14
-        const pz = Math.sin(ang) * 0.14
+      {layout.cylX.map((x, i) => {
+        const ang = (layout.pinAnglesDeg[i] * Math.PI) / 180
+        const py = Math.cos(ang) * layout.crankRScene
+        const pz = Math.sin(ang) * layout.crankRScene
         return (
           <group key={`p${x}`}>
             {/* rod pin with fillets */}
@@ -442,14 +453,14 @@ const Crankshaft: Builder = ({ material }) => {
         )
       })}
       {/* nose with drive sprocket */}
-      <mesh material={material} position={[-1.72, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh material={material} position={[-layout.blockHalfLen - 0.07, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.065, 0.065, 0.32, 16]} />
       </mesh>
-      <group position={[-1.62, 0, 0]}>
+      <group position={[-layout.blockHalfLen + 0.03, 0, 0]}>
         <Sprocket material={material} r={0.1} w={0.05} teeth={12} />
       </group>
       {/* rear flange with bolt circle */}
-      <mesh material={material} position={[1.66, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh material={material} position={[layout.blockHalfLen + 0.01, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.17, 0.17, 0.07, 28]} />
       </mesh>
       {Array.from({ length: 6 }).map((_, i) => {
@@ -458,7 +469,7 @@ const Crankshaft: Builder = ({ material }) => {
           <Bolt
             key={i}
             material={material}
-            p={[1.7, Math.cos(a) * 0.11, Math.sin(a) * 0.11]}
+            p={[layout.blockHalfLen + 0.05, Math.cos(a) * 0.11, Math.sin(a) * 0.11]}
             r={0.016}
             rot={[0, 0, Math.PI / 2]}
           />
@@ -679,22 +690,22 @@ const ExhaustManifold: Builder = ({ material }) => (
 
 /* ------------------------------- intake manifold ------------------------------- */
 
-const IntakeManifold: Builder = ({ material }) => (
+const IntakeManifold: Builder = ({ material, layout }) => (
   <group>
     {/* plenum: rounded casting with integrated charge cooler */}
-    <CastBody material={material} w={3.0} h={0.46} d={0.5} r={0.14} position={[0, 0.02, 0.32]} />
+    <CastBody material={material} w={layout.blockHalfLen * 2 - 0.3} h={0.46} d={0.5} r={0.14} position={[0, 0.02, 0.32]} />
     {/* charge cooler end tanks */}
-    {[-1.55, 1.55].map((x) => (
+    {[-layout.blockHalfLen + 0.1, layout.blockHalfLen - 0.1].map((x) => (
       <RoundedBox key={x} material={material} args={[0.16, 0.4, 0.44]} radius={0.05} position={[x, 0.02, 0.32]} />
     ))}
     {/* low-temp coolant fittings on the end tanks */}
-    {[-1.62, 1.62].map((x) => (
+    {[-layout.blockHalfLen + 0.03, layout.blockHalfLen - 0.03].map((x) => (
       <mesh key={`c${x}`} material={material} position={[x, 0.16, 0.32]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.04, 0.04, 0.12, 10]} />
       </mesh>
     ))}
     {/* curved runners into the head flange */}
-    {CYLS.map((x) => (
+    {layout.cylX.map((x) => (
       <Tube
         key={x}
         material={material}
@@ -709,13 +720,13 @@ const IntakeManifold: Builder = ({ material }) => (
       />
     ))}
     {/* head flange strip with bolts */}
-    <RoundedBox material={material} args={[3.1, 0.34, 0.05]} radius={0.02} position={[0, -0.1, -0.2]} />
-    {[-1.45, -1.0, -0.5, 0, 0.5, 1.0, 1.45].map((x) => (
+    <RoundedBox material={material} args={[layout.blockHalfLen * 2 - 0.2, 0.34, 0.05]} radius={0.02} position={[0, -0.1, -0.2]} />
+    {Array.from({ length: layout.cylX.length + 1 }, (_, i) => -layout.blockHalfLen + (i * layout.blockHalfLen * 2) / layout.cylX.length).map((x) => (
       <Bolt key={x} material={material} p={[x, 0.08, -0.2]} r={0.016} rot={[Math.PI / 2, 0, 0]} />
     ))}
     {/* cast rib on the plenum face */}
     <mesh material={material} position={[0, 0.06, 0.58]}>
-      <boxGeometry args={[2.6, 0.04, 0.02]} />
+      <boxGeometry args={[layout.blockHalfLen * 2 - 0.7, 0.04, 0.02]} />
     </mesh>
     {/* MAP sensor boss */}
     <mesh material={material} position={[0.6, 0.26, 0.32]}>
@@ -760,26 +771,26 @@ const ThrottleBody: Builder = ({ material }) => (
 
 /* ---------------------------------- fuel ---------------------------------- */
 
-const FuelRail: Builder = ({ material }) => (
+const FuelRail: Builder = ({ material, layout }) => (
   <group>
     <mesh material={material} rotation={[0, 0, Math.PI / 2]}>
-      <cylinderGeometry args={[0.045, 0.045, 2.7, 16]} />
+      <cylinderGeometry args={[0.045, 0.045, layout.blockHalfLen * 2 - 0.6, 16]} />
     </mesh>
     {/* injector cups */}
-    {CYLS.map((x) => (
+    {layout.cylX.map((x) => (
       <mesh key={x} material={material} position={[x, -0.06, 0]}>
         <cylinderGeometry args={[0.035, 0.035, 0.08, 10]} />
       </mesh>
     ))}
     {/* supply union + pressure sensor */}
-    <mesh material={material} position={[-1.38, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+    <mesh material={material} position={[-layout.blockHalfLen + 0.27, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
       <cylinderGeometry args={[0.055, 0.055, 0.06, 6]} />
     </mesh>
-    <mesh material={material} position={[1.2, 0.07, 0]}>
+    <mesh material={material} position={[layout.blockHalfLen - 0.45, 0.07, 0]}>
       <cylinderGeometry args={[0.03, 0.03, 0.07, 6]} />
     </mesh>
     {/* mounting tabs */}
-    {[-0.9, 0, 0.9].map((x) => (
+    {[-layout.blockHalfLen * 0.55, 0, layout.blockHalfLen * 0.55].map((x) => (
       <group key={x}>
         <RoundedBox material={material} args={[0.06, 0.02, 0.12]} radius={0.008} position={[x, 0, -0.08]} />
         <Bolt material={material} p={[x, 0.02, -0.13]} r={0.014} />
@@ -788,9 +799,9 @@ const FuelRail: Builder = ({ material }) => (
   </group>
 )
 
-const Injectors: Builder = ({ material }) => (
+const Injectors: Builder = ({ material, layout }) => (
   <group>
-    {CYLS.map((x) => (
+    {layout.cylX.map((x) => (
       <group key={x} position={[x, 0, 0]} rotation={[0.5, 0, 0]}>
         {/* connector head */}
         <RoundedBox material={material} args={[0.07, 0.06, 0.05]} radius={0.012} position={[0, 0.13, 0.03]} />
@@ -956,14 +967,14 @@ const OilPump: Builder = ({ material }) => (
   </group>
 )
 
-const Valvetronic: Builder = ({ material }) => (
+const Valvetronic: Builder = ({ material, layout }) => (
   <group>
     {/* eccentric shaft */}
     <mesh material={material} rotation={[0, 0, Math.PI / 2]}>
-      <cylinderGeometry args={[0.032, 0.032, 2.9, 12]} />
+      <cylinderGeometry args={[0.032, 0.032, layout.blockHalfLen * 2 - 0.4, 12]} />
     </mesh>
     {/* eccentric lobes + intermediate lever pairs per cylinder */}
-    {CYLS.map((x, i) => (
+    {layout.cylX.map((x, i) => (
       <group key={x}>
         <mesh material={material} position={[x, 0, 0]} rotation={[(i % 3) * 0.7, 0, Math.PI / 2]} scale={[1, 1, 1.35]}>
           <cylinderGeometry args={[0.05, 0.05, 0.06, 12]} />
@@ -974,14 +985,14 @@ const Valvetronic: Builder = ({ material }) => (
       </group>
     ))}
     {/* servo motor at the front */}
-    <group position={[-1.62, -0.02, 0]}>
+    <group position={[-layout.blockHalfLen + 0.03, -0.02, 0]}>
       <mesh material={material} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.06, 0.06, 0.22, 14]} />
       </mesh>
       <RoundedBox material={material} args={[0.1, 0.12, 0.12]} radius={0.02} position={[0.13, 0, 0]} />
     </group>
     {/* shaft position sensor */}
-    <mesh material={material} position={[1.5, 0.05, 0]}>
+    <mesh material={material} position={[layout.blockHalfLen - 0.15, 0.05, 0]}>
       <cylinderGeometry args={[0.03, 0.03, 0.06, 10]} />
     </mesh>
   </group>
@@ -1006,9 +1017,9 @@ const ElectricPump: Builder = ({ material }) => (
   </group>
 )
 
-const OilNozzles: Builder = ({ material }) => (
+const OilNozzles: Builder = ({ material, layout }) => (
   <group>
-    {CYLS.map((x) => (
+    {layout.cylX.map((x) => (
       <group key={x} position={[x, 0, 0]}>
         {/* mounting boss with banjo bolt */}
         <mesh material={material}>

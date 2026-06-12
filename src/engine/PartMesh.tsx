@@ -4,8 +4,7 @@ import { useFrame, useThree, ThreeEvent } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import type { PartDef } from '../types'
 import { SYSTEMS } from '../data/systems'
-import { REMOVAL_SEQUENCE } from '../data/parts'
-import { PIN_ANGLES, getCycle, simClock } from '../sim/engineCycle'
+import { getCycle, simClock } from '../sim/engineCycle'
 import { BUILDERS } from './geometry'
 import { useStore } from '../store'
 import { pName } from '../i18n/content'
@@ -15,21 +14,12 @@ const planeNormal = new THREE.Vector3()
 const dragPlane = new THREE.Plane()
 const hit = new THREE.Vector3()
 
-/* scene-unit slider-crank used for piston animation (matches crank geometry) */
-const R_S = 0.14
-const ROD_S = 0.46
-function pistonOffsetY(thetaDeg: number, pinDeg: number) {
+function pistonOffsetY(thetaDeg: number, pinDeg: number, crankR: number, rod: number) {
   const th = ((thetaDeg + pinDeg) * Math.PI) / 180
-  const s = R_S * Math.sin(th)
-  const x = R_S * (1 - Math.cos(th)) + ROD_S - Math.sqrt(ROD_S * ROD_S - s * s)
-  return R_S - x // +R_S at TDC, ≈ -R_S at BDC
+  const s = crankR * Math.sin(th)
+  const x = crankR * (1 - Math.cos(th)) + rod - Math.sqrt(rod * rod - s * s)
+  return crankR - x // +crankR at TDC, ≈ -crankR at BDC
 }
-
-/* parts that keep full opacity while the engine runs in sim modes */
-const MOVING = new Set([
-  'crankshaft', 'harmonic-damper', 'camshaft-intake', 'camshaft-exhaust', 'vanos-unit',
-  'timing-chain', 'piston-1', 'piston-2', 'piston-3', 'piston-4', 'piston-5', 'piston-6',
-])
 
 export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
   const group = useRef<THREE.Group>(null!)
@@ -38,6 +28,7 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
   const dragStart = useRef(new THREE.Vector3())
   const dragOffset = useRef<[number, number, number]>([0, 0, 0])
 
+  const engine = useStore((s) => s.engine)!
   const mode = useStore((s) => s.mode)
   const selected = useStore((s) => s.selectedId === def.id)
   const hovered = useStore((s) => s.hoveredId === def.id)
@@ -50,8 +41,9 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
   const showLabels = useStore((s) => s.showLabels)
   const lang = useStore((s) => s.lang)
   const nextHighlight = useStore(
-    (s) => s.mode === 'disassembly' && REMOVAL_SEQUENCE[s.disasmStep]?.id === def.id,
+    (s) => s.engine !== null && s.mode === 'disassembly' && s.engine.removalSequence[s.disasmStep]?.id === def.id,
   )
+  const moving = useMemo(() => new Set(engine.movingPartIds), [engine])
 
   const system = SYSTEMS[def.system]
 
@@ -107,7 +99,12 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
         group.current.rotation.x = (th / 2) % (Math.PI * 2)
       } else if (def.id.startsWith('piston-')) {
         const cyl = Number(def.id.slice(7)) - 1
-        group.current.position.y = target.y + pistonOffsetY(simClock.thetaDeg, PIN_ANGLES[cyl])
+        group.current.position.y = target.y + pistonOffsetY(
+          simClock.thetaDeg,
+          engine.geometry.pinAnglesDeg[cyl],
+          engine.geometry.crankRScene,
+          engine.geometry.rodScene,
+        )
       }
     } else if (group.current.rotation.x !== 0) {
       // settle back to the assembled pose when leaving sim modes
@@ -118,7 +115,8 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
     // stress heat-map coloring (blue → red by utilization), else base color
     if (mode === 'stress') {
       const st = useStore.getState()
-      const u = getCycle(st.simRpm, st.simLoad).partUtil[def.id] ?? 0.05
+      if (!st.engine) return
+      const u = getCycle(st.engine, st.simRpm, st.simLoad).partUtil[def.id] ?? 0.05
       material.color.setHSL(0.62 * (1 - Math.min(Math.max(u, 0), 1)), 0.85, 0.5)
     } else if (!material.color.equals(baseColor)) {
       material.color.lerp(baseColor, Math.min(1, dt * 8))
@@ -146,11 +144,11 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
           ? 0.45
           : 0.13
         : mode === 'combust'
-          ? MOVING.has(def.id)
+          ? moving.has(def.id)
             ? 1
             : 0.14
           : mode === 'stress'
-            ? MOVING.has(def.id)
+            ? moving.has(def.id)
               ? 1
               : 0.5
             : isolatedOut
@@ -256,10 +254,10 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
         if (!dragging) gl.domElement.style.cursor = 'auto'
       }}
     >
-      <Builder material={material} />
+      <Builder material={material} layout={engine.geometry} params={def.buildParams} />
       {labelVisible && (
         <Html center distanceFactor={9} position={[0, 0.45, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="part-label">{pName(lang, def)}</div>
+          <div className="part-label">{pName(lang, engine, def)}</div>
         </Html>
       )}
     </group>

@@ -1,4 +1,4 @@
-import type { PartDef } from '../types'
+import type { PartDef } from '../../types'
 
 const CYL_X = [-1.25, -0.75, -0.25, 0.25, 0.75, 1.25]
 

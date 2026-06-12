@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useStore } from '../store'
-import { PART_MAP } from '../data/parts'
 import { SYSTEMS } from '../data/systems'
 import { useI18n } from '../i18n'
 
@@ -20,12 +19,13 @@ const FoldButton: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
 
 export const InfoPanel: React.FC = () => {
   const selectedId = useStore((s) => s.selectedId)
+  const engine = useStore((s) => s.engine)
   const mode = useStore((s) => s.mode)
   const collapsed = useStore((s) => s.infoCollapsed)
   const hiddenHas = useStore((s) => (selectedId ? s.hiddenIds.has(selectedId) : false))
   const [expanded, setExpanded] = useState(false)
   const { t, pName, pField, sysName } = useI18n()
-  const part = selectedId ? PART_MAP.get(selectedId) : null
+  const part = selectedId && engine ? engine.partMap.get(selectedId) : null
 
   if (collapsed) {
     return (
@@ -102,7 +102,7 @@ export const InfoPanel: React.FC = () => {
         <span className="info-key">{t('info.relatedParts')}</span>
         <div className="related">
           {part.relatedPartIds.map((id) => {
-            const rp = PART_MAP.get(id)
+            const rp = engine?.partMap.get(id)
             if (!rp) return null
             return (
               <button

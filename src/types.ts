@@ -41,6 +41,8 @@ export interface PartDef {
   difficulty: 1 | 2 | 3
   /** simplified visual representation, documented per PRD accuracy rules */
   simplified?: string
+  /** optional geometry-builder customization for engine-specific visual variants */
+  buildParams?: Record<string, number | string | boolean>
 }
 
 export type Mode =
