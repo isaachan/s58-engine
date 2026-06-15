@@ -1089,8 +1089,10 @@ const S58ValveCover: Builder = ({ material, layout }) => {
           <cylinderGeometry args={[0.065, 0.08, 0.06, 16]} />
         </mesh>
       ))}
-      {/* M badge plate — wide centered rectangle */}
-      <RoundedBox material={material} args={[0.62, 0.025, 0.22]} radius={0.01} position={[0.7, 0.22, 0]} />
+      {/* M badge plate — raised proud of the cover surface, between the cam ridges */}
+      <RoundedBox material={material} args={[0.58, 0.05, 0.28]} radius={0.015} position={[0.7, 0.285, 0]} />
+      {/* badge plate border lip */}
+      <RoundedBox material={material} args={[0.64, 0.03, 0.34]} radius={0.015} position={[0.7, 0.265, 0]} />
       {/* oil filler cap with M hex profile */}
       <group position={[-layout.blockHalfLen + 0.12, 0.235, 0.28]}>
         <mesh material={material}><cylinderGeometry args={[0.08, 0.085, 0.05, 6]} /></mesh>
