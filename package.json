@@ -9,7 +9,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "electron": "npm run build && electron .",
-    "dist:win": "npm run build && electron-builder --win --publish never"
+    "dist:win": "npm run build && electron-builder --win --publish never",
+    "dist:mac": "npm run build && electron-builder --mac --publish never"
   },
   "build": {
     "appId": "com.s58.engine-trainer",
@@ -34,6 +35,20 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "public/favicon.svg",
+      "category": "public.app-category.education"
+    },
+    "dmg": {
+      "title": "S58 Engine Trainer",
+      "internetEnabled": false
     }
   },
   "dependencies": {
