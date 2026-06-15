@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import React, { useMemo } from 'react'
-import { RoundedBox } from '@react-three/drei'
+import { RoundedBox, Text } from '@react-three/drei'
 import type { GeometryLayout } from '../engines/types'
 import type { PartDef } from '../types'
 
@@ -1093,6 +1093,19 @@ const S58ValveCover: Builder = ({ material, layout }) => {
       <RoundedBox material={material} args={[0.58, 0.05, 0.28]} radius={0.015} position={[0.7, 0.285, 0]} />
       {/* badge plate border lip */}
       <RoundedBox material={material} args={[0.64, 0.03, 0.34]} radius={0.015} position={[0.7, 0.265, 0]} />
+      {/* M letter — lies flat on badge, rotated to face upward */}
+      <Text
+        position={[0.7, 0.314, 0]}
+        rotation={[-Math.PI / 2, 0, Math.PI / 2]}
+        fontSize={0.19}
+        letterSpacing={0}
+        color="#d8dfe8"
+        anchorX="center"
+        anchorY="middle"
+        depthOffset={-1}
+      >
+        M
+      </Text>
       {/* oil filler cap with M hex profile */}
       <group position={[-layout.blockHalfLen + 0.12, 0.235, 0.28]}>
         <mesh material={material}><cylinderGeometry args={[0.08, 0.085, 0.05, 6]} /></mesh>
