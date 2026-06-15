@@ -227,7 +227,7 @@ export const PartMesh: React.FC<{ def: PartDef }> = ({ def }) => {
     useStore.getState().focusPart(def.id)
   }
 
-  const Builder = BUILDERS[def.build]
+  const Builder = BUILDERS[`${engine.meta.id}:${def.build}`] ?? BUILDERS[def.build]
   if (!Builder) return null
 
   const labelVisible =

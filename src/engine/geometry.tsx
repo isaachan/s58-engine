@@ -508,33 +508,43 @@ const Damper: Builder = ({ material }) => (
 
 /* -------------------------------- timing parts -------------------------------- */
 
-const TimingCover: Builder = ({ material }) => (
+const TimingCover: Builder = ({ material, layout }) => {
+  const is6cyl = layout.cylX.length === 6
+  // 6-cyl cover is taller (taller head stack) and wider
+  const coverH = is6cyl ? 1.85 : 1.55
+  const coverW = is6cyl ? 0.95 : 0.82
+  const lowerH = is6cyl ? 0.55 : 0.48
+  const crankY = is6cyl ? -0.74 : -0.62
+  const boltYs = is6cyl ? [0.85, 0.5, 0.15, -0.2, -0.55] : [0.68, 0.35, 0.02, -0.3]
+  const halfW = coverW / 2 - 0.05
+  return (
   <group>
-    <RoundedBox material={material} args={[0.09, 1.85, 0.95]} radius={0.03} />
-    <RoundedBox material={material} args={[0.09, 0.55, 0.72]} radius={0.03} position={[0, -1.0, 0]} />
+    <RoundedBox material={material} args={[0.09, coverH, coverW]} radius={0.03} />
+    <RoundedBox material={material} args={[0.09, lowerH, coverW * 0.76]} radius={0.03} position={[0, -(coverH / 2 + lowerH / 2 - 0.02), 0]} />
     {/* front crank seal boss */}
-    <mesh material={material} position={[-0.05, -0.74, 0]} rotation={[0, 0, Math.PI / 2]}>
+    <mesh material={material} position={[-0.05, crankY, 0]} rotation={[0, 0, Math.PI / 2]}>
       <cylinderGeometry args={[0.16, 0.16, 0.05, 24]} />
     </mesh>
-    <mesh material={material} position={[-0.07, -0.74, 0]} rotation={[0, 0, Math.PI / 2]}>
+    <mesh material={material} position={[-0.07, crankY, 0]} rotation={[0, 0, Math.PI / 2]}>
       <torusGeometry args={[0.12, 0.015, 8, 24]} />
     </mesh>
     {/* perimeter bolts */}
-    {[0.85, 0.5, 0.15, -0.2, -0.55].map((y) => (
+    {boltYs.map((y) => (
       <group key={y}>
-        <Bolt material={material} p={[-0.055, y, 0.4]} rot={[0, 0, Math.PI / 2]} r={0.018} />
-        <Bolt material={material} p={[-0.055, y, -0.4]} rot={[0, 0, Math.PI / 2]} r={0.018} />
+        <Bolt material={material} p={[-0.055, y, halfW]} rot={[0, 0, Math.PI / 2]} r={0.018} />
+        <Bolt material={material} p={[-0.055, y, -halfW]} rot={[0, 0, Math.PI / 2]} r={0.018} />
       </group>
     ))}
     {/* cast ribs */}
     <mesh material={material} position={[-0.05, 0.2, 0]} rotation={[0, 0, 0.2]}>
-      <boxGeometry args={[0.02, 1.5, 0.06]} />
+      <boxGeometry args={[0.02, coverH * 0.8, 0.06]} />
     </mesh>
-    <mesh material={material} position={[-0.05, 0.1, 0.2]} rotation={[0.3, 0, -0.15]}>
-      <boxGeometry args={[0.02, 1.4, 0.06]} />
+    <mesh material={material} position={[-0.05, 0.1, coverW * 0.2]} rotation={[0.3, 0, -0.15]}>
+      <boxGeometry args={[0.02, coverH * 0.75, 0.06]} />
     </mesh>
   </group>
-)
+  )
+}
 
 const Vanos: Builder = ({ material }) => (
   <group>
@@ -652,25 +662,31 @@ const Turbo: Builder = ({ material }) => (
 
 /* ------------------------------ exhaust manifold ------------------------------ */
 
-const ExhaustManifold: Builder = ({ material }) => (
+const ExhaustManifold: Builder = ({ material, layout }) => {
+  // For 6-cyl engines the manifold covers half the bank (3 cyls), positions
+  // centered around 0. For 4-cyl engines it covers all 4 cylinders.
+  const is6cyl = layout.cylX.length === 6
+  const runnerXs: number[] = is6cyl ? [-0.5, 0, 0.5] : [-0.6, -0.2, 0.2, 0.6]
+  const halfSpan = (runnerXs[runnerXs.length - 1] - runnerXs[0]) / 2 + 0.1
+  return (
   <group>
-    {/* three splined runners from head flange down into the collector */}
-    {[-0.5, 0, 0.5].map((x) => (
+    {/* splined runners from head flange down into the collector */}
+    {runnerXs.map((x) => (
       <Tube
         key={x}
         material={material}
-        r={0.062}
+        r={0.055}
         pts={[
           [x, 0.18, 0.22],
-          [x * 0.85, 0.12, 0.0],
-          [x * 0.45, -0.05, -0.14],
-          [x * 0.15, -0.12, -0.18],
+          [x * 0.8, 0.12, 0.0],
+          [x * 0.4, -0.05, -0.14],
+          [x * 0.12, -0.12, -0.18],
         ]}
         seg={20}
       />
     ))}
     {/* port flanges with studs */}
-    {[-0.5, 0, 0.5].map((x) => (
+    {runnerXs.map((x) => (
       <group key={`f${x}`} position={[x, 0.18, 0.26]}>
         <RoundedBox material={material} args={[0.22, 0.24, 0.04]} radius={0.02} />
         <Bolt material={material} p={[-0.085, 0.09, 0]} r={0.014} rot={[Math.PI / 2, 0, 0]} />
@@ -679,14 +695,15 @@ const ExhaustManifold: Builder = ({ material }) => (
     ))}
     {/* collector */}
     <mesh material={material} position={[0, -0.13, -0.2]} rotation={[0, 0, Math.PI / 2]}>
-      <cylinderGeometry args={[0.095, 0.095, 0.5, 18]} />
+      <cylinderGeometry args={[0.095, 0.095, halfSpan * 2, 18]} />
     </mesh>
     {/* turbo flange */}
     <mesh material={material} position={[0, -0.13, -0.28]} rotation={[Math.PI / 2, 0, 0]}>
       <cylinderGeometry args={[0.12, 0.12, 0.04, 20]} />
     </mesh>
   </group>
-)
+  )
+}
 
 /* ------------------------------- intake manifold ------------------------------- */
 
@@ -911,37 +928,43 @@ const OilFilter: Builder = ({ material }) => (
   </group>
 )
 
-const OilPan: Builder = ({ material }) => (
+const OilPan: Builder = ({ material, layout }) => {
+  const w = layout.blockHalfLen * 2 + 0.24
+  const sumpOffX = -layout.blockHalfLen * 0.4
+  const boltXs = Array.from({ length: Math.round(w / 0.5) + 1 }, (_, i) => -w / 2 + 0.25 + i * (w / Math.round(w / 0.5)))
+  const finXs = Array.from({ length: 5 }, (_, i) => sumpOffX - 0.55 + i * 0.25)
+  return (
   <group>
     {/* sealing flange with perimeter bolts */}
-    <RoundedBox material={material} args={[3.24, 0.05, 0.92]} radius={0.02} position={[0, 0.18, 0]} />
-    {[-1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5].map((x) => (
+    <RoundedBox material={material} args={[w, 0.05, 0.92]} radius={0.02} position={[0, 0.18, 0]} />
+    {boltXs.map((x) => (
       <group key={x}>
         <Bolt material={material} p={[x, 0.18, 0.43]} r={0.015} />
         <Bolt material={material} p={[x, 0.18, -0.43]} r={0.015} />
       </group>
     ))}
     {/* upper pan */}
-    <CastBody material={material} w={3.15} h={0.22} d={0.82} r={0.05} position={[0, 0.05, 0]} />
+    <CastBody material={material} w={w - 0.09} h={0.22} d={0.82} r={0.05} position={[0, 0.05, 0]} />
     {/* deep sump with chamfered transition */}
-    <CastBody material={material} w={1.7} h={0.34} d={0.68} r={0.07} position={[-0.65, -0.2, 0]} />
-    <mesh material={material} position={[0.35, -0.1, 0]} rotation={[0, 0, 0.5]}>
+    <CastBody material={material} w={layout.blockHalfLen} h={0.34} d={0.68} r={0.07} position={[sumpOffX, -0.2, 0]} />
+    <mesh material={material} position={[sumpOffX + layout.blockHalfLen * 0.6, -0.1, 0]} rotation={[0, 0, 0.5]}>
       <boxGeometry args={[0.34, 0.2, 0.66]} />
     </mesh>
     {/* cooling fins on the sump */}
-    {[-1.1, -0.85, -0.6, -0.35, -0.1].map((x) => (
+    {finXs.map((x) => (
       <mesh key={x} material={material} position={[x, -0.34, 0]}>
         <boxGeometry args={[0.03, 0.08, 0.6]} />
       </mesh>
     ))}
     {/* drain plug */}
-    <Bolt material={material} p={[-0.65, -0.39, 0.12]} r={0.03} h={0.035} rot={[Math.PI, 0, 0]} />
+    <Bolt material={material} p={[sumpOffX, -0.39, 0.12]} r={0.03} h={0.035} rot={[Math.PI, 0, 0]} />
     {/* oil level sensor boss */}
-    <mesh material={material} position={[0.2, -0.13, 0.3]}>
+    <mesh material={material} position={[sumpOffX + 0.4, -0.13, 0.3]}>
       <cylinderGeometry args={[0.04, 0.04, 0.05, 10]} />
     </mesh>
   </group>
-)
+  )
+}
 
 const OilPump: Builder = ({ material }) => (
   <group>
@@ -1033,6 +1056,322 @@ const OilNozzles: Builder = ({ material, layout }) => (
   </group>
 )
 
+/* ============================================================
+   ENGINE-SPECIFIC VARIANTS
+   Registered as  "<engineId>:<builderKey>"  in BUILDERS below.
+   PartMesh resolves engine-prefixed key first, then falls back.
+   ============================================================ */
+
+/* ---- Valve Covers ---- */
+
+// S58: BMW inline-6 M, composite cover, prominent twin-cam ridges, M badge plate
+const S58ValveCover: Builder = ({ material, layout }) => {
+  const cyls = layout.cylX
+  const blockW = layout.blockHalfLen * 2
+  const shellGeo = useMemo(() => {
+    const g = new THREE.ExtrudeGeometry(roundedRect(0.92, 0.34, 0.12), { depth: blockW - 0.04, bevelEnabled: false })
+    g.rotateY(Math.PI / 2)
+    g.translate(-(blockW - 0.04) / 2, 0.05, 0)
+    return g
+  }, [blockW])
+  return (
+    <group>
+      <mesh material={material} geometry={shellGeo} />
+      {/* twin cam ridges running the length of the cover */}
+      {[0.2, -0.2].map((z) => (
+        <mesh key={z} material={material} position={[0, 0.2, z]}>
+          <boxGeometry args={[blockW - 0.12, 0.06, 0.1]} />
+        </mesh>
+      ))}
+      {/* spark plug tube bosses */}
+      {cyls.map((x) => (
+        <mesh key={x} material={material} position={[x, 0.24, 0]}>
+          <cylinderGeometry args={[0.065, 0.08, 0.06, 16]} />
+        </mesh>
+      ))}
+      {/* M badge plate — wide centered rectangle */}
+      <RoundedBox material={material} args={[0.62, 0.025, 0.22]} radius={0.01} position={[0.7, 0.22, 0]} />
+      {/* oil filler cap with M hex profile */}
+      <group position={[-layout.blockHalfLen + 0.12, 0.235, 0.28]}>
+        <mesh material={material}><cylinderGeometry args={[0.08, 0.085, 0.05, 6]} /></mesh>
+        <mesh material={material} position={[0, 0.03, 0]}><boxGeometry args={[0.12, 0.02, 0.04]} /></mesh>
+      </group>
+      {/* PCV port on exhaust side */}
+      <mesh material={material} position={[layout.blockHalfLen - 0.15, 0.16, -0.3]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.04, 0.04, 0.1, 10]} />
+      </mesh>
+      {/* perimeter bolts */}
+      {cyls.map((x) => (
+        <group key={x}>
+          <Bolt material={material} p={[x, -0.08, 0.44]} r={0.017} />
+          <Bolt material={material} p={[x, -0.08, -0.44]} r={0.017} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// N52: BMW inline-6 NA, aluminum cover, flatter profile, no M badge, wider vent
+const N52ValveCover: Builder = ({ material, layout }) => {
+  const cyls = layout.cylX
+  const blockW = layout.blockHalfLen * 2
+  const shellGeo = useMemo(() => {
+    const g = new THREE.ExtrudeGeometry(roundedRect(0.84, 0.26, 0.09), { depth: blockW - 0.06, bevelEnabled: false })
+    g.rotateY(Math.PI / 2)
+    g.translate(-(blockW - 0.06) / 2, 0.04, 0)
+    return g
+  }, [blockW])
+  return (
+    <group>
+      <mesh material={material} geometry={shellGeo} />
+      {/* single shallow central rib */}
+      <mesh material={material} position={[0, 0.17, 0]}>
+        <boxGeometry args={[blockW - 0.2, 0.04, 0.14]} />
+      </mesh>
+      {/* plug tube bosses */}
+      {cyls.map((x) => (
+        <mesh key={x} material={material} position={[x, 0.19, 0]}>
+          <cylinderGeometry args={[0.058, 0.07, 0.04, 14]} />
+        </mesh>
+      ))}
+      {/* wide PCV vent box on intake side */}
+      <RoundedBox material={material} args={[0.28, 0.06, 0.14]} radius={0.02} position={[0.6, 0.16, 0.32]} />
+      <mesh material={material} position={[0.6, 0.15, 0.42]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.038, 0.038, 0.06, 10]} />
+      </mesh>
+      {/* oil filler */}
+      <group position={[-layout.blockHalfLen + 0.14, 0.2, 0.24]}>
+        <mesh material={material}><cylinderGeometry args={[0.08, 0.085, 0.05, 8]} /></mesh>
+      </group>
+      {/* perimeter bolts */}
+      {cyls.map((x) => (
+        <group key={x}>
+          <Bolt material={material} p={[x, -0.06, 0.4]} r={0.016} />
+          <Bolt material={material} p={[x, -0.06, -0.4]} r={0.016} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// B48: BMW inline-4, shorter cover, integrated PCV separator ridge on top
+const B48ValveCover: Builder = ({ material, layout }) => {
+  const cyls = layout.cylX
+  const blockW = layout.blockHalfLen * 2
+  const shellGeo = useMemo(() => {
+    const g = new THREE.ExtrudeGeometry(roundedRect(0.88, 0.3, 0.1), { depth: blockW - 0.06, bevelEnabled: false })
+    g.rotateY(Math.PI / 2)
+    g.translate(-(blockW - 0.06) / 2, 0.04, 0)
+    return g
+  }, [blockW])
+  return (
+    <group>
+      <mesh material={material} geometry={shellGeo} />
+      {/* integrated PCV separator: raised box along exhaust side */}
+      <RoundedBox material={material} args={[blockW - 0.4, 0.06, 0.18]} radius={0.02} position={[0, 0.22, -0.28]} />
+      {/* separator outlet stub */}
+      <mesh material={material} position={[-layout.blockHalfLen + 0.2, 0.2, -0.36]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.032, 0.032, 0.06, 10]} />
+      </mesh>
+      {/* plug tube bosses */}
+      {cyls.map((x) => (
+        <mesh key={x} material={material} position={[x, 0.22, 0]}>
+          <cylinderGeometry args={[0.062, 0.075, 0.05, 14]} />
+        </mesh>
+      ))}
+      {/* oil filler */}
+      <group position={[layout.blockHalfLen - 0.18, 0.22, 0.24]}>
+        <mesh material={material}><cylinderGeometry args={[0.08, 0.085, 0.05, 8]} /></mesh>
+        <mesh material={material} position={[0, 0.03, 0]}><boxGeometry args={[0.13, 0.02, 0.04]} /></mesh>
+      </group>
+      {/* perimeter bolts */}
+      {cyls.map((x) => (
+        <group key={x}>
+          <Bolt material={material} p={[x, -0.07, 0.41]} r={0.016} />
+          <Bolt material={material} p={[x, -0.07, -0.41]} r={0.016} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// EA888: VW/Audi inline-4, diagonal rib pattern, large rectangular PCV housing
+const EA888ValveCover: Builder = ({ material, layout }) => {
+  const cyls = layout.cylX
+  const blockW = layout.blockHalfLen * 2
+  const shellGeo = useMemo(() => {
+    const g = new THREE.ExtrudeGeometry(roundedRect(0.86, 0.28, 0.09), { depth: blockW - 0.06, bevelEnabled: false })
+    g.rotateY(Math.PI / 2)
+    g.translate(-(blockW - 0.06) / 2, 0.04, 0)
+    return g
+  }, [blockW])
+  return (
+    <group>
+      <mesh material={material} geometry={shellGeo} />
+      {/* diagonal ribs */}
+      {[-0.4, 0, 0.4].map((x) => (
+        <mesh key={x} material={material} position={[x, 0.19, 0]} rotation={[0, 0.35, 0]}>
+          <boxGeometry args={[0.06, 0.03, blockW * 0.55]} />
+        </mesh>
+      ))}
+      {/* large rectangular PCV housing on intake side */}
+      <RoundedBox material={material} args={[0.38, 0.1, 0.2]} radius={0.025} position={[-0.5, 0.21, 0.32]} />
+      <mesh material={material} position={[-0.64, 0.18, 0.42]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.03, 0.03, 0.06, 10]} />
+      </mesh>
+      {/* plug tube bosses */}
+      {cyls.map((x) => (
+        <mesh key={x} material={material} position={[x, 0.2, 0]}>
+          <cylinderGeometry args={[0.06, 0.072, 0.04, 14]} />
+        </mesh>
+      ))}
+      {/* oil filler — VW style oval cap */}
+      <group position={[layout.blockHalfLen - 0.2, 0.2, -0.28]}>
+        <mesh material={material}><cylinderGeometry args={[0.075, 0.08, 0.05, 8]} /></mesh>
+      </group>
+      {/* perimeter bolts */}
+      {cyls.map((x) => (
+        <group key={x}>
+          <Bolt material={material} p={[x, -0.06, 0.4]} r={0.016} />
+          <Bolt material={material} p={[x, -0.06, -0.4]} r={0.016} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// Skyactiv-G: Mazda inline-4, flat aluminum, simple cross-ribs, Mazda-style filler
+const SkyactivGValveCover: Builder = ({ material, layout }) => {
+  const cyls = layout.cylX
+  const blockW = layout.blockHalfLen * 2
+  const shellGeo = useMemo(() => {
+    const g = new THREE.ExtrudeGeometry(roundedRect(0.82, 0.22, 0.08), { depth: blockW - 0.08, bevelEnabled: false })
+    g.rotateY(Math.PI / 2)
+    g.translate(-(blockW - 0.08) / 2, 0.03, 0)
+    return g
+  }, [blockW])
+  return (
+    <group>
+      <mesh material={material} geometry={shellGeo} />
+      {/* cross ribs: longitudinal */}
+      <mesh material={material} position={[0, 0.15, 0.2]}>
+        <boxGeometry args={[blockW - 0.3, 0.025, 0.08]} />
+      </mesh>
+      <mesh material={material} position={[0, 0.15, -0.2]}>
+        <boxGeometry args={[blockW - 0.3, 0.025, 0.08]} />
+      </mesh>
+      {/* transverse ribs between cylinders */}
+      {cyls.map((x) => (
+        <mesh key={x} material={material} position={[x, 0.15, 0]}>
+          <boxGeometry args={[0.04, 0.025, 0.5]} />
+        </mesh>
+      ))}
+      {/* plug tube bosses — recessed style */}
+      {cyls.map((x) => (
+        <mesh key={x} material={material} position={[x, 0.17, 0]}>
+          <cylinderGeometry args={[0.055, 0.065, 0.035, 14]} />
+        </mesh>
+      ))}
+      {/* Mazda-style filler cap (round with arrow mark) */}
+      <group position={[layout.blockHalfLen - 0.2, 0.16, 0.28]}>
+        <mesh material={material}><cylinderGeometry args={[0.078, 0.082, 0.045, 18]} /></mesh>
+        <mesh material={material} position={[0, 0.03, 0]}><cylinderGeometry args={[0.04, 0.04, 0.015, 18]} /></mesh>
+      </group>
+      {/* PCV tube stub — minimal, on front */}
+      <mesh material={material} position={[-layout.blockHalfLen + 0.16, 0.12, -0.3]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.025, 0.025, 0.05, 8]} />
+      </mesh>
+      {/* perimeter bolts */}
+      {cyls.map((x) => (
+        <group key={x}>
+          <Bolt material={material} p={[x, -0.05, 0.38]} r={0.015} />
+          <Bolt material={material} p={[x, -0.05, -0.38]} r={0.015} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
+/* ---- Intake Manifolds (NA engines) ---- */
+
+// N52: NA inline-6, no charge cooler, DISA variable intake housing bulge, long runners
+const N52IntakeManifold: Builder = ({ material, layout }) => (
+  <group>
+    {/* main plenum — taller, no end tanks */}
+    <CastBody material={material} w={layout.blockHalfLen * 2 - 0.2} h={0.52} d={0.46} r={0.12} position={[0, 0.04, 0.28]} />
+    {/* DISA housing — large butterfly-valve bulge at center */}
+    <RoundedBox material={material} args={[0.52, 0.44, 0.22]} radius={0.06} position={[0, 0.04, 0.08]} />
+    {/* DISA actuator motor on the side */}
+    <group position={[0.32, 0.04, 0.08]}>
+      <mesh material={material} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.07, 0.07, 0.18, 14]} />
+      </mesh>
+      <RoundedBox material={material} args={[0.1, 0.12, 0.1]} radius={0.02} position={[0.1, 0, 0]} />
+    </group>
+    {/* longer curved runners (NA = longer runners for low-end torque) */}
+    {layout.cylX.map((x) => (
+      <Tube
+        key={x}
+        material={material}
+        r={0.072}
+        pts={[
+          [x, 0.08, 0.22],
+          [x, 0.02, 0.04],
+          [x, -0.06, -0.1],
+          [x, -0.14, -0.22],
+        ]}
+        seg={16}
+      />
+    ))}
+    {/* head flange */}
+    <RoundedBox material={material} args={[layout.blockHalfLen * 2 - 0.2, 0.34, 0.05]} radius={0.02} position={[0, -0.1, -0.24]} />
+    {Array.from({ length: layout.cylX.length + 1 }, (_, i) => -layout.blockHalfLen + (i * layout.blockHalfLen * 2) / layout.cylX.length).map((x) => (
+      <Bolt key={x} material={material} p={[x, 0.08, -0.24]} r={0.016} rot={[Math.PI / 2, 0, 0]} />
+    ))}
+    {/* MAP sensor */}
+    <mesh material={material} position={[0.5, 0.3, 0.28]}>
+      <cylinderGeometry args={[0.032, 0.032, 0.055, 10]} />
+    </mesh>
+  </group>
+)
+
+// Skyactiv-G: NA inline-4, simple short-runner plenum, no charge cooler, Mazda style
+const SkyactivGIntakeManifold: Builder = ({ material, layout }) => (
+  <group>
+    {/* compact plenum box */}
+    <CastBody material={material} w={layout.blockHalfLen * 2 - 0.3} h={0.38} d={0.42} r={0.1} position={[0, 0.0, 0.26]} />
+    {/* inlet pipe from throttle body — slightly tapered */}
+    <Tube
+      material={material}
+      r={0.075}
+      pts={[[-layout.blockHalfLen + 0.1, 0.05, 0.26], [-layout.blockHalfLen - 0.06, 0.05, 0.36], [-layout.blockHalfLen - 0.12, 0.05, 0.54]]}
+      seg={10}
+    />
+    {/* short, near-vertical runners */}
+    {layout.cylX.map((x) => (
+      <Tube
+        key={x}
+        material={material}
+        r={0.068}
+        pts={[
+          [x, 0.02, 0.2],
+          [x, -0.02, 0.06],
+          [x, -0.1, -0.1],
+          [x, -0.14, -0.2],
+        ]}
+        seg={12}
+      />
+    ))}
+    {/* head flange */}
+    <RoundedBox material={material} args={[layout.blockHalfLen * 2 - 0.22, 0.3, 0.05]} radius={0.02} position={[0, -0.08, -0.22]} />
+    {Array.from({ length: layout.cylX.length + 1 }, (_, i) => -layout.blockHalfLen + (i * layout.blockHalfLen * 2) / layout.cylX.length).map((x) => (
+      <Bolt key={x} material={material} p={[x, 0.06, -0.22]} r={0.015} rot={[Math.PI / 2, 0, 0]} />
+    ))}
+    {/* MAP sensor + tumble valve actuator box */}
+    <RoundedBox material={material} args={[0.16, 0.1, 0.08]} radius={0.02} position={[0.5, 0.08, 0.26]} />
+  </group>
+)
+
 export const BUILDERS: Record<string, Builder> = {
   block: Block,
   head: Head,
@@ -1059,4 +1398,12 @@ export const BUILDERS: Record<string, Builder> = {
   valvetronic: Valvetronic,
   electricPump: ElectricPump,
   oilNozzles: OilNozzles,
+  // engine-specific variants (resolved by PartMesh as "<engineId>:<key>")
+  's58:valveCover': S58ValveCover,
+  'n52:valveCover': N52ValveCover,
+  'b48:valveCover': B48ValveCover,
+  'ea888:valveCover': EA888ValveCover,
+  'skyactiv-g:valveCover': SkyactivGValveCover,
+  'n52:intakeManifold': N52IntakeManifold,
+  'skyactiv-g:intakeManifold': SkyactivGIntakeManifold,
 }
