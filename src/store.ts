@@ -90,6 +90,7 @@ interface State {
   engineRunning: boolean
   sideCollapsed: boolean
   infoCollapsed: boolean
+  glossaryOpen: boolean
 
   selectEngine: (id: EngineId) => void
   exitToLanding: () => void
@@ -115,6 +116,7 @@ interface State {
   setLang: (l: Lang) => void
   toggleSidePanel: () => void
   toggleInfoPanel: () => void
+  setGlossaryOpen: (v: boolean) => void
   toggleEngine: () => void
   flash: (f: Omit<Feedback, 'ts'>) => void
 
@@ -171,6 +173,7 @@ export const useStore = create<State>((set, get) => ({
   engineRunning: false,
   sideCollapsed: localStorage.getItem('s58-side-collapsed') === '1',
   infoCollapsed: localStorage.getItem('s58-info-collapsed') === '1',
+  glossaryOpen: false,
 
   selectEngine: (id) => {
     const engine = getEngine(id)
@@ -314,6 +317,7 @@ export const useStore = create<State>((set, get) => ({
       localStorage.setItem('s58-info-collapsed', s.infoCollapsed ? '0' : '1')
       return { infoCollapsed: !s.infoCollapsed }
     }),
+  setGlossaryOpen: (v) => set({ glossaryOpen: v }),
   flash: (f) => {
     set({ feedback: { ...f, ts: Date.now() } })
     setTimeout(() => {

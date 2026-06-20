@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, shell } = require('electron')
 const path = require('path')
 
 function createWindow() {
@@ -11,6 +11,16 @@ function createWindow() {
     },
     title: 'S58 Engine Trainer',
     autoHideMenuBar: true,
+  })
+
+  // Citation links (rendered as target="_blank") open in the system browser
+  // instead of spawning an in-app window. http/https only; everything else
+  // is denied so the offline app can't be navigated away.
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      void shell.openExternal(url)
+    }
+    return { action: 'deny' }
   })
 
   win.loadFile(path.join(__dirname, '../dist/index.html'))

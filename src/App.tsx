@@ -4,6 +4,7 @@ import { InfoPanel } from './ui/InfoPanel'
 import { SidePanel } from './ui/SidePanel'
 import { TopBar, BottomToolbar, Toast } from './ui/Toolbar'
 import { LandingScreen } from './ui/LandingScreen'
+import { GlossaryPanel } from './ui/GlossaryPanel'
 import { useStore } from './store'
 import { engineSound } from './sim/engineSound'
 
@@ -66,6 +67,7 @@ export const App: React.FC = () => {
             </div>
             <InfoPanel />
           </div>
+          <GlossaryPanel />
         </>
       ) : (
         <LandingScreen />

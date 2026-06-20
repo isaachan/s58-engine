@@ -21,6 +21,20 @@ function piston(i: number): PartDef {
     removalOrder: 27 + i,
     difficulty: 3,
     simplified: 'Piston, rings, wrist pin and rod are modeled as one assembly.',
+    sources: [
+      {
+        label: 'BMW S58 forged pistons & closed-deck block — BMW Group technical press',
+        labelZh: 'BMW S58 锻造活塞与闭式缸体 — 宝马集团技术新闻稿',
+        kind: 'manual',
+        url: 'https://www.press.bmwgroup.com/global/article/detail/T0298784EN/the-new-bmw-m3-and-bmw-m4',
+      },
+      {
+        label: 'Torque-to-yield rod bolts: why they are single-use (SAE)',
+        labelZh: '扭矩-屈服连杆螺栓为何一次性使用（SAE）',
+        kind: 'sae',
+        ref: 'SAE J158 — Tightening of fasteners beyond yield',
+      },
+    ],
   }
 }
 
@@ -43,6 +57,14 @@ export const PARTS: PartDef[] = [
     removalOrder: -1,
     difficulty: 1,
     simplified: 'Coolant jackets and internal galleries are not modeled.',
+    sources: [
+      {
+        label: 'BMW S58 closed-deck crankcase with wire-arc-sprayed bores — BMW Group',
+        labelZh: 'BMW S58 闭式缸体与电弧喷涂缸壁 — 宝马集团',
+        kind: 'manual',
+        url: 'https://www.press.bmwgroup.com/global/article/detail/T0298784EN/the-new-bmw-m3-and-bmw-m4',
+      },
+    ],
   },
   {
     id: 'cylinder-head',

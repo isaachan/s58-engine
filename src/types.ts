@@ -19,6 +19,24 @@ export interface SystemInfo {
 
 export type Vec3 = [number, number, number]
 
+/**
+ * A citation / reference backing a piece of content (a part description,
+ * a glossary entry, an engine spec). Labels are kept inline (English +
+ * optional Chinese) so sources live next to the English source-of-truth
+ * data without needing an i18n overlay, keeping types.ts dependency-free.
+ */
+export interface Source {
+  /** Human-readable citation, e.g. "BMW S58 Technical Training §3.2" */
+  label: string
+  /** Optional Chinese rendering of the label */
+  labelZh?: string
+  kind: 'manual' | 'sae' | 'article' | 'video' | 'patent'
+  /** External link; opened in the system browser when present */
+  url?: string
+  /** Reference shown when there is no url (page/section/doc number) */
+  ref?: string
+}
+
 export interface PartDef {
   id: string
   name: string
@@ -43,6 +61,8 @@ export interface PartDef {
   simplified?: string
   /** optional geometry-builder customization for engine-specific visual variants */
   buildParams?: Record<string, number | string | boolean>
+  /** citations / references backing this part's description (enthusiast mode) */
+  sources?: Source[]
 }
 
 export type Mode =

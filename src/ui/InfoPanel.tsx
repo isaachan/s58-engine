@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useStore } from '../store'
 import { SYSTEMS } from '../data/systems'
 import { useI18n } from '../i18n'
+import { SourceList } from './SourceList'
+import { RichText } from './RichText'
 
 const FoldButton: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
   const { t } = useI18n()
@@ -62,11 +64,11 @@ export const InfoPanel: React.FC = () => {
       <h2>{pName(part)}</h2>
       <div className="info-row">
         <span className="info-key">{t('info.function')}</span>
-        <p>{pField(part, 'function')}</p>
+        <p><RichText>{pField(part, 'function')}</RichText></p>
       </div>
       <div className="info-row">
         <span className="info-key">{t('info.location')}</span>
-        <p>{pField(part, 'location')}</p>
+        <p><RichText>{pField(part, 'location')}</RichText></p>
       </div>
       <div className="info-row">
         <span className="info-key">{t('info.difficulty')}</span>
@@ -82,18 +84,24 @@ export const InfoPanel: React.FC = () => {
         <>
           <div className="info-row">
             <span className="info-key">{t('info.inspection')}</span>
-            <p>{pField(part, 'inspectionNotes')}</p>
+            <p><RichText>{pField(part, 'inspectionNotes')}</RichText></p>
           </div>
           {failure && (
             <div className="info-row">
               <span className="info-key">{t('info.commonWear')}</span>
-              <p>{failure}</p>
+              <p><RichText>{failure}</RichText></p>
             </div>
           )}
           {simplified && (
             <div className="info-row">
               <span className="info-key">{t('info.modelNote')}</span>
               <p className="muted">{simplified}</p>
+            </div>
+          )}
+          {part.sources && part.sources.length > 0 && (
+            <div className="info-row">
+              <span className="info-key">{t('info.sources')}</span>
+              <SourceList sources={part.sources} />
             </div>
           )}
         </>

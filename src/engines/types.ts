@@ -1,4 +1,4 @@
-import type { PartDef, QuizQuestion, SystemId, Vec3 } from '../types'
+import type { PartDef, QuizQuestion, Source, SystemId, Vec3 } from '../types'
 import type { FlowResult } from '../sim/flow'
 
 export type EngineId = 's58' | 'b48' | 'skyactiv-g' | 'ea888' | 'n52'
@@ -26,6 +26,8 @@ export interface EngineMeta {
     compressionRatio: number
     firingOrder: string
   }
+  /** engine-level citations (spec sheets, technical training, reviews) */
+  sources?: Source[]
 }
 
 export interface GeometryLayout {
@@ -61,9 +63,30 @@ export interface FlowPhysics {
   turboMaxKrpm: number
 }
 
+/** One looped recording captured at a representative engine speed. */
+export interface SampleLayer {
+  /** URL of the looped audio clip, bundled under public/ (e.g. /audio/s58/idle.ogg) */
+  url: string
+  /** engine speed the clip was recorded at; used to pitch-shift toward the target rpm */
+  rpm: number
+}
+
+/**
+ * Optional real-recording layers. When present and loadable, the sampler
+ * crossfades between them by rpm; otherwise the synthesized note is used.
+ * NOTE: no audio assets ship yet — see TODO.md "真实引擎音效".
+ */
+export interface EngineSamples {
+  idle?: SampleLayer
+  mid?: SampleLayer
+  redline?: SampleLayer
+}
+
 export interface SoundParams {
   firesPerRev: number
   redlineRpm: number
+  /** real engine recordings; falls back to synthesis when absent or unloadable */
+  samples?: EngineSamples
 }
 
 export interface CircuitDef {

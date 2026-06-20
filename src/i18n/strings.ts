@@ -74,9 +74,22 @@ const en: Dict = {
   'info.commonWear': 'Common wear',
   'info.modelNote': 'Model note',
   'info.relatedParts': 'Related parts',
+  'info.sources': 'Sources',
+  'info.source.manual': 'Manual',
+  'info.source.sae': 'SAE / paper',
+  'info.source.article': 'Article',
+  'info.source.video': 'Video',
+  'info.source.patent': 'Patent',
   'info.resetPosition': 'Reset position',
   'info.showPart': 'Show part',
   'info.hidePart': 'Hide part',
+
+  // glossary
+  'glossary.title': 'Glossary',
+  'glossary.open': 'Glossary',
+  'glossary.search': 'Search terms…',
+  'glossary.none': 'No matching terms',
+  'glossary.pickHint': 'Pick a term to read its definition.',
 
   // exploded panel
   'exploded.systems': 'Systems',
@@ -280,9 +293,22 @@ const zh: Dict = {
   'info.commonWear': '常见磨损',
   'info.modelNote': '模型说明',
   'info.relatedParts': '相关零件',
+  'info.sources': '资料来源',
+  'info.source.manual': '手册',
+  'info.source.sae': 'SAE / 论文',
+  'info.source.article': '文章',
+  'info.source.video': '视频',
+  'info.source.patent': '专利',
   'info.resetPosition': '复位位置',
   'info.showPart': '显示零件',
   'info.hidePart': '隐藏零件',
+
+  // glossary
+  'glossary.title': '术语表',
+  'glossary.open': '术语表',
+  'glossary.search': '搜索术语…',
+  'glossary.none': '无匹配术语',
+  'glossary.pickHint': '选择一个术语查看释义。',
 
   'exploded.systems': '系统',
   'exploded.isolateHint': '隔离某一系统以便单独学习，其他系统将淡出。',

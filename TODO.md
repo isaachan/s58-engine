@@ -1,3 +1,15 @@
+# 发烧友改造 — 真实引擎音效（待补素材）
+
+采样播放代码已就绪（`src/sim/engineSound.ts` 的 `SampleEngine`），缺真实录音素材。
+
+- [ ] 取得各引擎授权/自录的循环音频（怠速 / 中段 / 红线三段），放 `public/audio/<engineId>/`
+- [ ] 在每个引擎的 `sound`（`src/engines/<id>/physics.ts` 或 index）填 `samples: { idle:{url,rpm}, mid:{url,rpm}, redline:{url,rpm} }`
+- [ ] 确认 `electron-builder` 把 `public/audio/**` 打进 `dist`（Vite 默认拷贝 public/）
+- [ ] 解决音频版权来源（自录 / 授权库），离线打包，无网络依赖
+- 注：缺素材时自动回退合成音，功能不受影响
+
+---
+
 # Plan B — Engine-Specific Geometry Differentiation
 
 ## 基础设施

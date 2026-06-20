@@ -94,6 +94,13 @@ export const TopBar: React.FC = () => {
         <LangSwitch />
         <button
           className="theme-toggle"
+          onClick={() => useStore.getState().setGlossaryOpen(true)}
+          title={t('glossary.open')}
+        >
+          <span aria-hidden>📖</span> <DualLabel k="glossary.open" />
+        </button>
+        <button
+          className="theme-toggle"
           onClick={() => useStore.getState().exitToLanding()}
           title={t('topbar.changeEngine')}
         >

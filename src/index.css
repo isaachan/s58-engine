@@ -222,6 +222,75 @@ body {
 .link-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 12.5px; text-align: left; padding: 0; }
 .panel-actions { display: flex; gap: 6px; }
 
+.source-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.source-item { display: flex; align-items: baseline; gap: 6px; font-size: 12px; line-height: 1.4; }
+.source-kind {
+  flex: none; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600;
+  padding: 1px 5px; border-radius: 4px; background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--muted);
+}
+.source-kind--video { color: #c0563f; }
+.source-kind--patent { color: #7a6cc0; }
+.source-link { color: var(--accent); text-decoration: none; }
+.source-link:hover { text-decoration: underline; }
+.source-ref { color: var(--muted); font-size: 11px; }
+
+/* glossary inline terms */
+.gloss-term {
+  background: none; border: none; padding: 0; cursor: help; color: inherit; font: inherit;
+  border-bottom: 1px dashed var(--accent); line-height: inherit;
+}
+.gloss-term:hover { color: var(--accent); }
+
+/* glossary term popover (portaled to body, fixed-positioned) */
+.gloss-pop {
+  position: fixed; z-index: 60; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 11px 13px; box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  display: flex; flex-direction: column; gap: 7px; font-size: 12.5px; line-height: 1.45;
+}
+.gloss-pop-term { font-weight: 700; font-size: 13.5px; }
+.gloss-pop-short { margin: 0; }
+.gloss-pop-long { margin: 0; color: var(--muted); }
+.gloss-more { font-size: 11.5px; }
+.gloss-related { display: flex; flex-wrap: wrap; gap: 5px; }
+.gloss-chip {
+  background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+  font-size: 11px; padding: 3px 8px; border-radius: 12px; cursor: pointer;
+}
+.gloss-chip:hover { border-color: var(--accent); }
+
+/* glossary browse modal */
+.gloss-overlay {
+  position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+}
+.gloss-modal {
+  width: min(760px, 92vw); height: min(560px, 86vh); background: var(--panel);
+  border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column;
+  padding: 16px 18px; box-shadow: 0 16px 48px rgba(0,0,0,0.45);
+}
+.gloss-modal-head { display: flex; align-items: center; justify-content: space-between; }
+.gloss-modal-head h2 { margin: 0; font-size: 18px; }
+.gloss-close { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; }
+.gloss-close:hover { color: var(--text); }
+.gloss-search {
+  margin: 12px 0; padding: 8px 11px; border: 1px solid var(--border); border-radius: 7px;
+  background: var(--panel-2); color: var(--text); font-size: 13px;
+}
+.gloss-body { display: grid; grid-template-columns: 200px 1fr; gap: 16px; flex: 1; min-height: 0; }
+.gloss-index { list-style: none; margin: 0; padding: 0; overflow-y: auto; border-right: 1px solid var(--border); }
+.gloss-index button {
+  width: 100%; text-align: left; background: none; border: none; color: var(--text);
+  padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 13px;
+}
+.gloss-index button:hover { background: var(--panel-2); }
+.gloss-index button.active { background: var(--accent); color: #fff; }
+.gloss-empty { padding: 6px 8px; font-size: 12.5px; }
+.gloss-detail { overflow-y: auto; display: flex; flex-direction: column; gap: 9px; font-size: 13px; line-height: 1.5; }
+.gloss-detail h3 { margin: 0; font-size: 16px; }
+.gloss-detail p { margin: 0; }
+.gloss-detail-long { color: var(--muted); }
+
 /* ---------- bottom toolbar ---------- */
 .bottom-bar {
   position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
