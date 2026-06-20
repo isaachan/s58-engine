@@ -211,7 +211,9 @@ class SampleEngine implements SoundEngine {
       const defs = sampleLayers(p.samples!)
       const buffers = await Promise.all(
         defs.map((d) =>
-          fetch(d.url)
+          // resolve relative to the document so it works under both the dev
+          // server (http://…/) and the Electron file:// build (base './')
+          fetch(new URL(d.url, document.baseURI).href)
             .then((r) => r.arrayBuffer())
             .then((a) => ctx.decodeAudioData(a)),
         ),

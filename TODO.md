@@ -1,12 +1,16 @@
-# 发烧友改造 — 真实引擎音效（待补素材）
+# 发烧友改造 — 真实引擎音效（起步素材已接入，待打磨）
 
-采样播放代码已就绪（`src/sim/engineSound.ts` 的 `SampleEngine`），缺真实录音素材。
+采样器 `src/sim/engineSound.ts`（`SampleEngine`）已接入 Pixabay 起步素材，5 款引擎都能出真实声。
 
-- [ ] 取得各引擎授权/自录的循环音频（怠速 / 中段 / 红线三段），放 `public/audio/<engineId>/`
-- [ ] 在每个引擎的 `sound`（`src/engines/<id>/physics.ts` 或 index）填 `samples: { idle:{url,rpm}, mid:{url,rpm}, redline:{url,rpm} }`
-- [ ] 确认 `electron-builder` 把 `public/audio/**` 打进 `dist`（Vite 默认拷贝 public/）
-- [ ] 解决音频版权来源（自录 / 授权库），离线打包，无网络依赖
-- 注：缺素材时自动回退合成音，功能不受影响
+- [x] 起步素材下载到 `public/audio/clips/`（Pixabay，CC0/Pixabay 授权，非商用）
+- [x] 5 款引擎 `physics.ts` 的 `sound.samples` 已填（idle + redline 两层，按声音特征匹配）
+- [x] 确认 Vite 把 `public/audio/**` 拷进 `dist`（已验证）
+- [x] 验证 fetch+decode 路径（dev 下 HTTP 200、解码正常）
+- [ ] **打磨**：素材是按"特征"匹配的通用车声、非精确机型；逐个试听替换更贴的剪辑
+- [ ] **做循环**：现剪辑首尾未做过零点/交叉淡化，长时间循环可能有接缝感；用 Audacity 处理
+- [ ] 可选：补 mid 层（现为 idle↔redline 两层交叉），让中段更自然
+- [ ] 可选：转 `.ogg` 压体积（现 8 个 mp3 ≈ 6MB）
+- 注：缺/坏素材时自动回退合成音，不影响功能
 
 ---
 

@@ -26,6 +26,11 @@ export const flow: FlowPhysics = {
 export const sound: SoundParams = {
   firesPerRev: 2,
   redlineRpm: 7500,
+  // small NA inline-four (Pixabay, swap in public/audio/clips/)
+  samples: {
+    idle: { url: 'audio/clips/suzuki-small-car.mp3', rpm: 800 },
+    redline: { url: 'audio/clips/car-rev-2.mp3', rpm: 5500 },
+  },
 }
 
 export const stressParts: [string, string][] = [
