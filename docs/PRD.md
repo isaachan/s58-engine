@@ -74,11 +74,28 @@ educational lumped-parameter simulations (not CFD/FEA grade):
   per-component load utilization shown as a 3D heat map.
 - Engine start/stop control: each simulation mode (flow, combustion, torque/stress)
   provides a Start/Stop engine button. While stopped, simulation animation is frozen.
-- Engine audio: while the engine runs, the app plays synthesized engine sound whose pitch
-  follows the firing frequency of the selected engine speed and whose intensity follows
-  load; the sound changes continuously as speed and load sliders move. Audio is generated
-  in the browser (no audio assets, works offline) and is supplementary — all information
-  remains available without sound, per the accessibility requirements.
+- Engine audio: while the engine runs, the app plays an engine note that tracks the
+  selected engine speed (pitch follows firing frequency) and load (intensity); the sound
+  changes continuously as the speed and load sliders move. Two back-ends sit behind one
+  start/update/stop interface: a sample-based player that crossfades real engine recordings
+  by rpm and pitch-shifts them toward the target speed, and a fully synthesized note. The
+  sampler is used when an engine supplies recordings and falls back to synthesis while clips
+  load or if any are missing, so there is never a silent gap. Recordings are bundled with the
+  app (no network needed, works offline) and remain supplementary — all information stays
+  available without sound, per the accessibility requirements.
+
+The following learning-support features have also been added. They deepen self-directed,
+"trust-but-verify" learning and broaden the audience beyond professional mechanics toward
+engine enthusiasts and self-learners:
+
+- Component citations: parts (and engine-level specifications) may carry source references —
+  service manuals, SAE/technical papers, articles, videos, or patents — surfaced in the
+  learning panel. Linked sources open in the system browser; references without a link show
+  a citation identifier (page/section/document number).
+- Terminology glossary: an in-app, bilingual glossary of engine terms. Part descriptions
+  auto-link the first occurrence of each known term to a click-to-open definition popover
+  (short definition, optional longer explanation, sources, and related terms). A searchable
+  glossary panel, reachable from the top bar, lets users browse and cross-navigate every term.
 
 ## 6. Key Training Modes
 
@@ -186,6 +203,7 @@ Each selectable part should include:
 - Inspection notes.
 - Common failure or wear points, where relevant.
 - Training difficulty level.
+- Source citations (references backing the description), where available.
 
 ### 7.3 Interaction Controls
 
@@ -241,6 +259,33 @@ MVP dashboard requirements:
 - View incorrect answers.
 - View disassembly and reassembly attempts.
 - Export basic progress report as CSV.
+
+### 7.7 Terminology Glossary
+
+An in-app glossary explains engine terminology for self-directed learners.
+
+Requirements:
+
+- Maintain a curated, bilingual (English / 简体中文) glossary of engine terms.
+- Auto-link the first occurrence of each known term inside part descriptions to a
+  click-to-open definition popover (short definition, optional longer explanation, sources,
+  related terms). Authored content is not rewritten — matching is driven by a term whitelist.
+- Provide a searchable glossary panel, opened from the top bar, to browse all terms and
+  cross-navigate between related terms.
+- Glossary content is supplementary; descriptions remain readable without opening any term.
+
+### 7.8 Source Citations
+
+Selectable parts and engine specifications may cite the sources behind their content.
+
+Requirements:
+
+- Allow each part (and the engine metadata) to carry zero or more sources.
+- Each source has a human-readable label, a kind (manual, SAE/paper, article, video,
+  patent), and either an external link or a citation identifier.
+- Surface sources in the learning panel under a "Sources" section.
+- Open linked sources in the system browser rather than navigating away from the app;
+  non-HTTP links are not followed.
 
 ## 8. User Stories
 
@@ -368,6 +413,24 @@ Future support:
 - `relatedPartIds`
 - `inspectionNotes`
 - `difficulty`
+- `sources` (optional list of citations: `label`, `kind`, `url` or `ref`)
+
+### Glossary Term
+
+- `id`
+- `term` (localized)
+- `match` (per-language phrases that trigger auto-linking)
+- `short` (localized one-line definition)
+- `long` (optional localized explanation)
+- `sources` (optional citations)
+- `related` (related term ids)
+
+### Engine Audio
+
+- `firesPerRev`
+- `redlineRpm`
+- `samples` (optional: `idle` / `mid` / `redline` layers, each a bundled clip `url` plus the
+  `rpm` it represents; absent ⇒ synthesized note)
 
 ### Training Module
 
@@ -403,7 +466,7 @@ Future support:
 - The UI shall provide a language switch in the top bar. The product is multi-language;
   English and Simplified Chinese (简体中文) are supported, and the selection persists across
   sessions. Translation covers all interface chrome, part names and service metadata, quiz
-  content, and in-app feedback messages.
+  content, glossary terms, and in-app feedback messages.
 - Training instructions should be concise and tied to the current task.
 - The UI should support both free exploration and structured training without changing products.
 
@@ -527,4 +590,7 @@ Mitigation:
   implemented; the i18n layer supports adding further languages — see the localization
   section of the implementation spec.)
 - What certification or scoring standard should be used for professional training?
+- What is the long-term source and licensing basis for the real engine audio? (Current
+  clips are character-matched, royalty-free placeholders; per-engine accuracy and loop
+  polish are open.)
 
