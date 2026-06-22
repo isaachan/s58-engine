@@ -57,7 +57,7 @@
 
 ## #2 localStorage 两套 key 前缀 + 误导命名 🟠
 
-**状态**：`[ ]`
+**状态**：`[x]`
 
 ### 现象
 UI 偏好用 `s58-*`，引擎相关用 `trainer-*`，两套前缀并存；且 `s58-` 在 5 引擎项目里是误称。
@@ -82,6 +82,10 @@ UI 偏好用 `s58-*`，引擎相关用 `trainer-*`，两套前缀并存；且 `s
 
 ### 备注
 `glossaryOpen` 刻意不持久化（每次进入默认关闭），而 `side/info collapsed` 持久化——这是合理的差异，非缺陷，但在统一 key 时请勿顺手给 `glossaryOpen` 加持久化。
+
+已于 storage.ts 处理：新增 `src/storage.ts`，单一命名空间常量 `NS = 'engine-app'` + `k(name)` 生成全部 key（`engine-app:theme` / `:lang` / `:side-collapsed` / `:info-collapsed` / `:last-engine` / `:progress-v1:<id>`）。偏好 key 经 `migratePreferenceKeys()`（store 模块加载、初始 state 读取前调用一次）从旧 `s58-*`/`trainer-*` 一次性迁移；进度 key 的迁移在 `progressStorage.ts` 内按旧 key 形态（`trainer-progress-v1:<id>`、s58 再加 `s58-trainer-progress-v1`）逐级回退。`store.ts` / `progressStorage.ts` / `LandingScreen.tsx` 中的字符串字面量已全部改走 `k()`。按备注未给 `glossaryOpen` 加持久化。`npm run build` 通过。
+
+> 注：本项原建议与 Phase D 改名合并；因迁移逻辑向后兼容旧 key，独立落地无数据丢失风险，故先行处理。命名空间沿用本节建议的 `engine-app`，Phase D 如最终改名只需在 `storage.ts` 调整 `NS` 并补一条迁移即可。
 
 ---
 

@@ -7,6 +7,10 @@ import { getEngine } from './engines'
 import { engineSound } from './sim/engineSound'
 import { simClock } from './sim/engineCycle'
 import { freshProgress, loadProgress, saveProgress } from './progressStorage'
+import { k, migratePreferenceKeys } from './storage'
+
+// Bring any pre-namespace preference keys forward before initial state reads them.
+migratePreferenceKeys()
 
 export interface Feedback {
   kind: 'ok' | 'warn' | 'info'
@@ -137,18 +141,18 @@ export const useStore = create<State>((set, get) => ({
   simRpm: 2400,
   simLoad: 0.8,
   simTimeScale: 0.05,
-  theme: (localStorage.getItem('s58-theme') as 'dark' | 'light') || 'dark',
-  lang: (localStorage.getItem('s58-lang') as Lang) || 'en',
+  theme: (localStorage.getItem(k('theme')) as 'dark' | 'light') || 'dark',
+  lang: (localStorage.getItem(k('lang')) as Lang) || 'en',
   engineRunning: false,
-  sideCollapsed: localStorage.getItem('s58-side-collapsed') === '1',
-  infoCollapsed: localStorage.getItem('s58-info-collapsed') === '1',
+  sideCollapsed: localStorage.getItem(k('side-collapsed')) === '1',
+  infoCollapsed: localStorage.getItem(k('info-collapsed')) === '1',
   glossaryOpen: false,
 
   selectEngine: (id) => {
     const engine = getEngine(id)
     simClock.thetaDeg = 0
     engineSound.stop()
-    localStorage.setItem('trainer-last-engine', id)
+    localStorage.setItem(k('last-engine'), id)
     set({
       engine,
       mode: 'explore',
@@ -269,21 +273,21 @@ export const useStore = create<State>((set, get) => ({
   toggleTheme: () =>
     set((s) => {
       const theme = s.theme === 'dark' ? 'light' : 'dark'
-      localStorage.setItem('s58-theme', theme)
+      localStorage.setItem(k('theme'), theme)
       return { theme }
     }),
   setLang: (l) => {
-    localStorage.setItem('s58-lang', l)
+    localStorage.setItem(k('lang'), l)
     set({ lang: l })
   },
   toggleSidePanel: () =>
     set((s) => {
-      localStorage.setItem('s58-side-collapsed', s.sideCollapsed ? '0' : '1')
+      localStorage.setItem(k('side-collapsed'), s.sideCollapsed ? '0' : '1')
       return { sideCollapsed: !s.sideCollapsed }
     }),
   toggleInfoPanel: () =>
     set((s) => {
-      localStorage.setItem('s58-info-collapsed', s.infoCollapsed ? '0' : '1')
+      localStorage.setItem(k('info-collapsed'), s.infoCollapsed ? '0' : '1')
       return { infoCollapsed: !s.infoCollapsed }
     }),
   setGlossaryOpen: (v) => set({ glossaryOpen: v }),

@@ -4,6 +4,7 @@ import type { EngineMeta, LocalizedString } from '../engines/types'
 import { useI18n } from '../i18n'
 import { useStore } from '../store'
 import { loadProgressSummary } from '../progressStorage'
+import { k } from '../storage'
 
 const Text: React.FC<{ value: LocalizedString }> = ({ value }) => {
   const { lang } = useI18n()
@@ -44,7 +45,7 @@ const EngineCard: React.FC<{ meta: EngineMeta; last: string | null }> = ({ meta,
 
 export const LandingScreen: React.FC = () => {
   const { t } = useI18n()
-  const last = localStorage.getItem('trainer-last-engine')
+  const last = localStorage.getItem(k('last-engine'))
   return (
     <main className="landing">
       <section className="landing-inner">

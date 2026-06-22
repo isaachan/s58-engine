@@ -1,5 +1,6 @@
 import type { Progress } from './types'
 import type { EngineId } from './engines/types'
+import { k } from './storage'
 
 /**
  * Single source of truth for trainee-progress persistence.
@@ -7,9 +8,13 @@ import type { EngineId } from './engines/types'
  * storage key and serialization format can never silently drift apart.
  */
 
-const LEGACY_STORAGE_KEY = 's58-trainer-progress-v1'
+/** Older key shapes, newest first, migrated on read. */
+const legacyProgressKeys = (id: EngineId): string[] => [
+  `trainer-progress-v1:${id}`,
+  ...(id === 's58' ? ['s58-trainer-progress-v1'] : []),
+]
 
-export const progressKey = (id: EngineId) => `trainer-progress-v1:${id}`
+export const progressKey = (id: EngineId) => k(`progress-v1:${id}`)
 
 export const freshProgress = (): Progress => ({
   trainee: 'Trainee',
@@ -22,16 +27,19 @@ export const freshProgress = (): Progress => ({
   quizResults: [],
 })
 
-/** Read raw stored progress for an engine, migrating the legacy s58 key once. */
+/** Read raw stored progress for an engine, migrating older key shapes once. */
 function readStored(id: EngineId): Progress | null {
   try {
     const key = progressKey(id)
     let raw = localStorage.getItem(key)
-    if (!raw && id === 's58') {
-      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY)
-      if (legacy) {
-        localStorage.setItem(key, legacy)
-        raw = legacy
+    if (!raw) {
+      for (const old of legacyProgressKeys(id)) {
+        const legacy = localStorage.getItem(old)
+        if (legacy) {
+          localStorage.setItem(key, legacy)
+          raw = legacy
+          break
+        }
       }
     }
     if (raw) return JSON.parse(raw)
