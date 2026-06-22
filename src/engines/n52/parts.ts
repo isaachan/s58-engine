@@ -1,6 +1,6 @@
 import type { PartDef } from '../../types'
 
-const CYL_X = [-1.25, -0.75, -0.25, 0.25, 0.75, 1.25]
+import { cylX } from './geometry'
 
 function piston(i: number): PartDef {
   return {
@@ -8,7 +8,7 @@ function piston(i: number): PartDef {
     name: `Piston & Connecting Rod #${i + 1}`,
     system: 'rotating',
     build: 'piston',
-    position: [CYL_X[i], 0.18, 0],
+    position: [cylX[i], 0.18, 0],
     explodeOffset: [0, 1.5, 0],
     function: 'Converts combustion pressure into crankshaft torque. The N52 runs naturally-aspirated pistons at a 10.7:1 compression ratio.',
     location: `Cylinder ${i + 1}, counted from the front (timing end) of the engine.`,
@@ -118,7 +118,7 @@ export const PARTS: PartDef[] = [
     removalOrder: 26,
     difficulty: 3,
   },
-  ...CYL_X.map((_, i) => piston(i)),
+  ...cylX.map((_, i) => piston(i)),
   {
     id: 'harmonic-damper',
     name: 'Harmonic Damper (Crank Pulley)',

@@ -111,7 +111,7 @@ UI 偏好用 `s58-*`，引擎相关用 `trainer-*`，两套前缀并存；且 `s
 
 ## #4 `cylX`（气缸 X 坐标）在每个引擎重复两份 🔴
 
-**状态**：`[ ]`
+**状态**：`[x]`（已于 geometry.ts 抽取一并处理）
 
 ### 现象
 同一物理常量在 `parts.ts` 的 `const CYL_X` 和 `index.ts` 的 `geometry.cylX` 各写一份，5 引擎共 10 处，靠手动同步。
@@ -142,7 +142,7 @@ skyactiv-g/parts.ts:3 / .../index.ts:13  [-0.75,-0.25,0.25,0.75]
 
 ## #5 `geometry` 内联在 index.ts，是引擎数据切片里的"异类" 🟡
 
-**状态**：`[ ]`
+**状态**：`[x]`
 
 ### 现象
 每个引擎的数据都有专属文件（`parts.ts` / `physics.ts` / `quiz.ts` / `circuits.ts` / `meta.ts` / `content.zh.ts`），唯独 `geometry`（`GeometryLayout`）直接内联在 `index.ts`。index.ts 本应只做"装配"，却混入了一份原始数据定义。
@@ -156,6 +156,8 @@ skyactiv-g/parts.ts:3 / .../index.ts:13  [-0.75,-0.25,0.25,0.75]
 ### 建议方案
 - 抽出 `engines/<id>/geometry.ts` 导出 `geometry: GeometryLayout`（顺带导出 `cylX` 供 parts 复用，解决 #4）。
 - `index.ts` 回归纯 import + 组装。
+
+已于 geometry.ts 抽取处理：5 引擎各新增 `geometry.ts`，导出 `geometry` 与 `cylX`；`index.ts` 改为 `import { geometry }` 纯装配；`parts.ts` 改为 `import { cylX } from './geometry'`，删除本地 `const CYL_X`。`tsc -b` 与 `npm run build` 均通过。
 
 ### 工作量
 小（5 文件机械抽取）。
