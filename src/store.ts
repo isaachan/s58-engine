@@ -6,38 +6,7 @@ import type { EngineDefinition, EngineId } from './engines/types'
 import { getEngine } from './engines'
 import { engineSound } from './sim/engineSound'
 import { simClock } from './sim/engineCycle'
-
-const LEGACY_STORAGE_KEY = 's58-trainer-progress-v1'
-const progressKey = (id: EngineId) => `trainer-progress-v1:${id}`
-
-const freshProgress = (): Progress => ({
-  trainee: 'Trainee',
-  partsInspected: [],
-  disassemblyCompleted: false,
-  disassemblyMistakes: 0,
-  reassemblyCompleted: false,
-  reassemblyMistakes: 0,
-  reassemblyAttempts: 0,
-  quizResults: [],
-})
-
-function loadProgress(id: EngineId): Progress {
-  try {
-    const key = progressKey(id)
-    let raw = localStorage.getItem(key)
-    if (!raw && id === 's58') {
-      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY)
-      if (legacy) {
-        localStorage.setItem(key, legacy)
-        raw = legacy
-      }
-    }
-    if (raw) return JSON.parse(raw)
-  } catch {
-    /* corrupted progress falls back to fresh state */
-  }
-  return freshProgress()
-}
+import { freshProgress, loadProgress, saveProgress } from './progressStorage'
 
 export interface Feedback {
   kind: 'ok' | 'warn' | 'info'
@@ -134,7 +103,7 @@ interface State {
 
 function persist(engine: EngineDefinition | null, p: Progress) {
   if (!engine) return
-  localStorage.setItem(progressKey(engine.meta.id), JSON.stringify(p))
+  saveProgress(engine.meta.id, p)
 }
 
 export const useStore = create<State>((set, get) => ({

@@ -85,7 +85,7 @@ UI 偏好用 `s58-*`，引擎相关用 `trainer-*`，两套前缀并存；且 `s
 
 ## #3 进度存储 key 与读取逻辑重复定义 🔴
 
-**状态**：`[ ]`
+**状态**：`[x]`
 
 ### 现象
 进度的 storage key 与读取器在两处各写一遍，存在静默漂移风险。
@@ -100,6 +100,8 @@ UI 偏好用 `s58-*`，引擎相关用 `trainer-*`，两套前缀并存；且 `s
 ### 建议方案
 - 在 store（或一个 `progressStorage.ts` 模块）单一导出 `progressKey` 与读取器；`LandingScreen` 复用，不再自带副本。
 - 与 #2 合并：key 统一走命名空间常量。
+
+已于 progressStorage.ts 处理：新增 `src/progressStorage.ts`，单点导出 `progressKey` / `freshProgress` / `loadProgress`（含 legacy 迁移）/ `loadProgressSummary` / `saveProgress`。`store.ts` 与 `LandingScreen.tsx` 均改为复用，删除各自的 key 与读取副本。key 命名空间统一留待 #2/Phase D。`npm run build` 通过。
 
 ### 工作量
 小。

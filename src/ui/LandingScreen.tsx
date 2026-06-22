@@ -1,20 +1,9 @@
 import React from 'react'
 import { ENGINE_METAS } from '../engines'
-import type { EngineId, EngineMeta, LocalizedString } from '../engines/types'
-import type { Progress } from '../types'
+import type { EngineMeta, LocalizedString } from '../engines/types'
 import { useI18n } from '../i18n'
 import { useStore } from '../store'
-
-const progressKey = (id: EngineId) => `trainer-progress-v1:${id}`
-
-function loadSummary(id: EngineId): Progress | null {
-  try {
-    const raw = localStorage.getItem(progressKey(id))
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
-  }
-}
+import { loadProgressSummary } from '../progressStorage'
 
 const Text: React.FC<{ value: LocalizedString }> = ({ value }) => {
   const { lang } = useI18n()
@@ -23,7 +12,7 @@ const Text: React.FC<{ value: LocalizedString }> = ({ value }) => {
 
 const EngineCard: React.FC<{ meta: EngineMeta; last: string | null }> = ({ meta, last }) => {
   const { t } = useI18n()
-  const p = loadSummary(meta.id)
+  const p = loadProgressSummary(meta.id)
   const best = p?.quizResults.length ? Math.max(...p.quizResults.map((r) => Math.round((r.score / r.total) * 100))) : 0
   return (
     <button className="engine-card" onClick={() => useStore.getState().selectEngine(meta.id)}>
