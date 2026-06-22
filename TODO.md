@@ -1,4 +1,31 @@
-# 发烧友改造 — 真实引擎音效（起步素材已接入，待打磨）
+# TODO / 跟踪项
+
+> 架构 review（`docs/ARCH_IMPROVEMENTS.md`）的 #1–#5 已全部完成。下列为由此衍生、
+> 但不属于该清单的后续跟踪项。
+
+## 架构后续
+
+### Phase D — 改名 / 重定位（未排期）
+- 背景：项目名为 `s58-engine`，但实为 5 引擎应用，`s58-` 前缀是误称（见架构 review #2）。
+- #2 的 localStorage 命名空间已先行统一为 `engine-app`（`src/storage.ts` 的 `NS`），迁移逻辑兼容旧 key。
+- [ ] Phase D 落地时确定最终项目/产品名，并：
+  - [ ] 若改命名空间，调整 `src/storage.ts` 的 `NS` 并补一条 `migratePreferenceKeys` 迁移（保持向后兼容，勿丢用户偏好/进度）
+  - [ ] 评估目录/包名 / `package.json` `name` / `appId`（`com.s58.engine-trainer`）是否一并改
+- 决策点：当时架构师建议 #2「与 Phase D 合并」；现已独立落地，Phase D 仅需收尾命名。
+
+### 防复发约定的执行（持续）
+- `docs/ARCH_IMPROVEMENTS.md` 末尾「防止复发的约定」是活的护栏，靠后续 PR review 遵守，无代码改动：
+  - 内容本地化：大列表用「英文源 + `engine.zh` overlay（单一存放点）」；小对象用内联 `{ en, zh }`
+  - 持久化：所有 localStorage key 经 `k()` 生成，定义与读取器单点导出
+  - 引擎数据：每类数据一个专属文件，`index.ts` 只装配
+  - 单一真源：跨文件共享常量（如 `cylX`）只定义一次
+
+### 构建体积（低优先级）
+- [ ] `npm run build` 提示主 chunk >500kB；可后续用 dynamic import / `manualChunks` 拆分（与本次 review 无关）
+
+---
+
+## 发烧友改造 — 真实引擎音效（起步素材已接入，待打磨）
 
 采样器 `src/sim/engineSound.ts`（`SampleEngine`）已接入 Pixabay 起步素材，5 款引擎都能出真实声。
 
@@ -11,41 +38,3 @@
 - [ ] 可选：补 mid 层（现为 idle↔redline 两层交叉），让中段更自然
 - [ ] 可选：转 `.ogg` 压体积（现 8 个 mp3 ≈ 6MB）
 - 注：缺/坏素材时自动回退合成音，不影响功能
-
----
-
-# Plan B — Engine-Specific Geometry Differentiation
-
-## 基础设施
-
-- [x] 支持引擎命名空间 Builder key：`build: 'skyactiv-g:valveCover'` → `BUILDERS` 里注册对应 key，`PartMesh` 查找时优先引擎前缀版本，找不到再 fallback 全局 key
-
-## 修复错误（所有引擎）
-
-- [x] **ExhaustManifold**：从 `layout.cylX` 动态生成 runner 数量（4 缸 → 4 runner，6 缸 → 已有 2×3 split 保持不变）
-- [x] **OilPan**：宽度跟随 `layout.blockHalfLen` 缩放，不再 hardcode `3.24`
-- [x] **TimingCover**：高度/宽度跟随 `layout.blockHalfLen`，区分 4 缸和 6 缸
-
-## 引擎专属 Builder
-
-### Valve Cover（最具辨识度）
-- [x] `s58:valveCover` — 复合材料盖，双凸轮凸起，M 徽标板
-- [x] `n52:valveCover` — 铝制，较平，无 M 徽标，更宽通气口
-- [x] `b48:valveCover` — 4 缸，更短，集成 PCV 分离器
-- [x] `ea888:valveCover` — 大众风格，不同肋条走向，独特 PCV 布局
-- [x] `skyactiv-g:valveCover` — 马自达风格，较平整，浅色铝质外观
-
-### Intake Manifold（NA vs 涡轮外形差异）
-- [x] `n52:intakeManifold` — 无中冷器，DISA 可变进气（大型阀体凸起），更长进气道
-- [x] `skyactiv-g:intakeManifold` — 无中冷器，简洁短进气道，马自达风格 plenum
-
-### Timing Cover（6 缸 vs 4 缸轮廓）
-- [x] 全局 TimingCover 已根据 `layout.cylX` 自动区分 4 缸/6 缸高度和宽度（无需引擎专属版本）
-
-## 优先级顺序
-1. 基础设施
-2. ExhaustManifold bug
-3. Valve Cover
-4. Intake Manifold
-5. Timing Cover
-6. OilPan
