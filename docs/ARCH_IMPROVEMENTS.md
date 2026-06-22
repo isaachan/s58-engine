@@ -15,7 +15,7 @@
 
 ## #1 内容本地化存在两种建模策略 + overlay 两个存放点 🔴
 
-**状态**：`[ ]`
+**状态**：`[x]`
 
 ### 现象
 对"需要翻译的数据内容"，代码层并存两种互斥风格；其中 overlay 风格自身又有两个存放点。
@@ -44,6 +44,8 @@
 1. **统一 overlay 的单一存放点**：把 s58 的 `PARTS_ZH`/`QUIZ_ZH` 迁回 `engines/s58/content.zh.ts`，删除中央 `PARTS_ZH`/`QUIZ_ZH` 及 `pField`/quiz 解析里的对应 fallback 分支（只保留 `engine.zh.* ?? 英文`）。
 2. **明确边界约定并写入本节**：大列表（parts/quiz）用风格 B（英文+overlay，便于翻译协作）；小型单点对象（meta/glossary/source）用风格 A（内联双语）。决定 glossary/citation 是否回迁——建议**保持 A**，因为它们是小对象且与 meta 一致。
 3. 在 `content.ts` 顶部注释里固化该边界，防复发。
+
+已于 content.zh.ts 迁移处理：s58 的 `PARTS_ZH`/`QUIZ_ZH` 全量迁回 `engines/s58/content.zh.ts`（含 `pistonZh` 循环填充）；删除中央 `PARTS_ZH`/`QUIZ_ZH` 及 `pField`/`quizPrompt`/`quizOptions` 的对应 fallback 分支，overlay 解析现仅保留 `engine.zh.* ?? 英文` 单一路径。共享的 `SYSTEMS_ZH`/`CIRCUITS_ZH`（按 SystemId/circuit id 跨引擎共用，非每引擎内容）保留在中央。glossary/citation 按建议保持风格 A。`content.ts` 顶部注释已改写为边界约定。`npm run build` 通过。
 
 ### 工作量
 中（迁移 s58 一份 overlay + 删 fallback + 回归测试中英切换）。
